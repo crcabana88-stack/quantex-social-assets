@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantex OS</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0A1928;color:#F0F4FF;min-height:100vh}
+
+header{padding:2rem 2.5rem 1.5rem;border-bottom:1px solid rgba(201,168,76,.2)}
+.logo-row{display:flex;align-items:center;gap:1rem;margin-bottom:.35rem}
+.logo-mark{width:36px;height:36px}
+.logo-name{font-size:20px;font-weight:700;letter-spacing:.1em;color:#C9A84C}
+.logo-sub{font-size:12px;color:#6A85A8;letter-spacing:.06em}
+.header-meta{font-size:12px;color:#6A85A8;margin-top:.75rem}
+.header-meta span{color:#C9A84C;font-weight:500}
+
+.main{padding:2rem 2.5rem;max-width:1100px}
+
+.section-label{font-size:11px;font-weight:600;color:#C9A84C;letter-spacing:.1em;text-transform:uppercase;margin:2rem 0 1rem;display:flex;align-items:center;gap:.5rem}
+.section-label::after{content:'';flex:1;height:1px;background:rgba(201,168,76,.15)}
+
+.app-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem}
+
+.app-card{
+  background:#0F2340;
+  border:1px solid rgba(201,168,76,.18);
+  border-radius:12px;
+  padding:1.25rem 1.5rem;
+  text-decoration:none;
+  color:inherit;
+  display:block;
+  transition:border-color .15s,transform .15s;
+  position:relative;
+  overflow:hidden;
+}
+.app-card:hover{border-color:rgba(201,168,76,.5);transform:translateY(-1px)}
+.app-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent,#C9A84C),transparent);
+}
+.app-card.coming-soon{opacity:.55;cursor:default;pointer-events:none}
+
+.app-icon{font-size:24px;margin-bottom:.75rem}
+.app-name{font-size:14px;font-weight:600;color:#F0F4FF;margin-bottom:.3rem}
+.app-desc{font-size:12px;color:#6A85A8;line-height:1.6;margin-bottom:.875rem}
+.app-tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.875rem}
+.tag{font-size:10px;font-weight:500;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,.06);color:#6A85A8;letter-spacing:.03em}
+.tag.live{background:rgba(45,212,160,.12);color:#2DD4A0}
+.tag.session{background:rgba(201,168,76,.12);color:#C9A84C}
+.tag.coming{background:rgba(255,255,255,.05);color:#4A6588}
+
+.app-footer{display:flex;align-items:center;justify-content:space-between}
+.app-link{font-size:11px;font-weight:600;color:#C9A84C;letter-spacing:.04em;text-transform:uppercase}
+.app-updated{font-size:10px;color:#4A6588}
+
+.badge-new{position:absolute;top:12px;right:12px;font-size:9px;font-weight:700;background:#C9A84C;color:#0A1928;padding:2px 7px;border-radius:4px;letter-spacing:.06em}
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+.stat-card{background:#0F2340;border:1px solid rgba(201,168,76,.18);border-radius:10px;padding:1rem 1.25rem}
+.stat-val{font-size:1.75rem;font-weight:700;color:#F0F4FF;line-height:1}
+.stat-label{font-size:11px;color:#6A85A8;margin-top:.3rem}
+
+.github-bar{background:#0F2340;border:1px solid rgba(201,168,76,.18);border-radius:10px;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;margin-top:2rem;flex-wrap:wrap;gap:.75rem}
+.github-url{font-family:monospace;font-size:12px;color:#C9A84C}
+.github-note{font-size:12px;color:#6A85A8}
+
+footer{padding:1.5rem 2.5rem;border-top:1px solid rgba(255,255,255,.06);font-size:11px;color:#4A6588;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-top:2rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-row">
+    <svg class="logo-mark" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="10" cy="9" r="4" fill="#C9A84C"/>
+      <circle cx="10" cy="27" r="4" fill="#C9A84C"/>
+      <rect x="8" y="13" width="4" height="10" rx="2" fill="#C9A84C"/>
+      <circle cx="26" cy="18" r="4" fill="#C9A84C"/>
+      <rect x="14" y="16" width="8" height="4" rx="2" fill="#C9A84C"/>
+    </svg>
+    <div>
+      <div class="logo-name">QUANTEX OS</div>
+      <div class="logo-sub">App Command Center · Carlos R. Cabana</div>
+    </div>
+  </div>
+  <div class="header-meta">Last updated: <span>July 6, 2026</span> · Repo: <span>crcabana88-stack/quantex-social-assets</span> · Base URL: <span>raw.githubusercontent.com/crcabana88-stack/quantex-social-assets/main/</span></div>
+</header>
+
+<div class="main">
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-val">6</div><div class="stat-label">Apps built</div></div>
+    <div class="stat-card"><div class="stat-val">18</div><div class="stat-label">Posts scheduled</div></div>
+    <div class="stat-card"><div class="stat-val">5</div><div class="stat-label">Graphics in CDN</div></div>
+    <div class="stat-card"><div class="stat-val">4</div><div class="stat-label">Platforms active</div></div>
+  </div>
+
+  <div class="section-label">Social & Content</div>
+  <div class="app-grid">
+
+    <a class="app-card" href="https://raw.githubusercontent.com/crcabana88-stack/quantex-social-assets/main/apps/social-command-center.html" target="_blank" style="--accent:#2DD4A0">
+      <div class="badge-new">NEW</div>
+      <div class="app-icon">📊</div>
+      <div class="app-name">Social Command Center</div>
+      <div class="app-desc">Full content operations dashboard. Post queue, AI generator, news hooks, performance analytics, and automation rules across LinkedIn, Twitter, Instagram, Facebook.</div>
+      <div class="app-tags">
+        <span class="tag live">Live</span>
+        <span class="tag">Blotato</span>
+        <span class="tag">AI Generator</span>
+        <span class="tag">Analytics</span>
+      </div>
+      <div class="app-footer">
+        <span class="app-link">Open App →</span>
+        <span class="app-updated">Jul 6, 2026</span>
+      </div>
+    </a>
+
+    <a class="app-card coming-soon" href="#" style="--accent:#C9A84C">
+      <div class="app-icon">🗞️</div>
+      <div class="app-name">Research Report Builder</div>
+      <div class="app-desc">Generate branded Quantex institutional research PDFs. Select report, hook, audience — output a Wall Street-style PDF ready to post and distribute.</div>
+      <div class="app-tags">
+        <span class="tag coming">Coming next</span>
+        <span class="tag">PDF</span>
+        <span class="tag">ReportLab</span>
+      </div>
+      <div class="app-footer">
+        <span class="app-link" style="color:#4A6588">In pipeline</span>
+        <span class="app-updated">—</span>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="section-label">Product & Platform</div>
+  <div class="app-grid">
+
+    <a class="app-card coming-soon" href="#" style="--accent:#5AA8F0">
+      <div class="app-icon">⚡</div>
+      <div class="app-name">QHUB Interactive Demo</div>
+      <div class="app-desc">Bloomberg terminal-aesthetic buyside trader intelligence brain. Eight-question diagnostic, four-tab intelligence report. Used in CEWIT and Franklin Templeton meetings.</div>
+      <div class="app-tags">
+        <span class="tag session">Needs re-push</span>
+        <span class="tag">React</span>
+        <span class="tag">Demo</span>
+      </div>
+      <div class="app-footer">
+        <span class="app-link" style="color:#4A6588">Restore →</span>
+        <span class="app-updated">Built May 2026</span>
+      </div>
+    </a>
+
+    <a class="app-card coming-soon" href="#" style="--accent:#A07AF0">
+      <div class="app-icon">🔗</div>
+      <div class="app-name">A2A Protocol Simulator</div>
+      <div class="app-desc">Interactive HTML simulator for the A2A institutional equity trading architecture. 12 named agents across sell-side and buy-side. Used in CEWIT and Franklin Templeton meetings.</div>
+      <div class="app-tags">
+        <span class="tag session">Needs re-push</span>
+        <span class="tag">A2A</span>
+        <span class="tag">Simulator</span>
+      </div>
+      <div class="app-footer">
+        <span class="app-link" style="color:#4A6588">Restore →</span>
+        <span class="app-updated">Built Jun 2026</span>
+      </div>
+    </a>
+
+    <a class="app-card coming-soon" href="#" style="--accent:#C9A84C">
+      <div class="app-icon">🌐</div>
+      <div class="app-name">Quantex Website v10</div>
+      <div class="app-desc">Four-gate pipeline hero, freemium/Desk/Enterprise pricing, Research Center. Near-complete deliverable built on quantex_site_v10.html.</div>
+      <div class="app-tags">
+        <span class="tag session">Near complete</span>
+        <span class="tag">Marketing</span>
+        <span class="tag">Website</span>
+      </div>
+      <div class="app-footer">
+        <span class="app-link" style="color:#4A6588">Finalize →</span>
+        <span class="app-updated">Built Jun 2026</span>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="section-label">Outreach & GTM</div>
+  <div class="app-grid">
+
+    <a class="app-card coming-soon" href="#" style="--accent:#F07898">
+      <div class="app-icon">🎯</div>
+      <div class="app-name">QOutreach Module</div>
+      <div class="app-desc">Apollo.io prospecting + Claude API qualification + Waalaxy LinkedIn sequence delivery. First batch returned ~20% qualification rate.</div>
+      <div class="app-tags">
+        <span class="tag session">Base44</span>
+        <span class="tag">Apollo</span>
+        <span class="tag">Waalaxy</span>
+      </div>
+      <div class="app-footer">
+        <span class="app-link" style="color:#4A6588">Open in Base44 →</span>
+        <span class="app-updated">Built Jun 2026</span>
+      </div>
+    </a>
+
+    <a class="app-card coming-soon" href="#" style="--accent:#2DD4A0">
+      <div class="app-icon">📋</div>
+      <div class="app-name">Design Partner Tracker</div>
+      <div class="app-desc">Track design partner pipeline: Christian Gunther (DFA), Tom Nelson (Franklin Templeton), CLSA (Stash). LOI status, follow-up dates, intro paths.</div>
+      <div class="app-tags">
+        <span class="tag coming">To build</span>
+        <span class="tag">CRM</span>
+        <span class="tag">Pipeline</span>
+      </div>
+      <div class="app-footer">
+        <span class="app-link" style="color:#4A6588">In pipeline</span>
+        <span class="app-updated">—</span>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="section-label">Asset Library</div>
+  <div class="app-grid">
+
+    <div class="app-card" style="--accent:#C9A84C;cursor:default">
+      <div class="app-icon">🖼️</div>
+      <div class="app-name">Social Graphics CDN</div>
+      <div class="app-desc">5 branded 1080×1080 graphics. Flat navy background, gold icon watermark, white logo bottom-left. Auto-attached to Blotato posts via GitHub raw URLs.</div>
+      <div class="app-tags">
+        <span class="tag live">5 assets live</span>
+        <span class="tag">GitHub CDN</span>
+        <span class="tag">Blotato</span>
+      </div>
+      <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:.3rem">
+        <a href="https://raw.githubusercontent.com/crcabana88-stack/quantex-social-assets/main/burning_platform.png" target="_blank" style="font-size:11px;color:#C9A84C;text-decoration:none">→ burning_platform.png</a>
+        <a href="https://raw.githubusercontent.com/crcabana88-stack/quantex-social-assets/main/quantum_network.png" target="_blank" style="font-size:11px;color:#C9A84C;text-decoration:none">→ quantum_network.png</a>
+        <a href="https://raw.githubusercontent.com/crcabana88-stack/quantex-social-assets/main/right_order.png" target="_blank" style="font-size:11px;color:#C9A84C;text-decoration:none">→ right_order.png</a>
+        <a href="https://raw.githubusercontent.com/crcabana88-stack/quantex-social-assets/main/democratization_paradox.png" target="_blank" style="font-size:11px;color:#C9A84C;text-decoration:none">→ democratization_paradox.png</a>
+        <a href="https://raw.githubusercontent.com/crcabana88-stack/quantex-social-assets/main/boards_imperative.png" target="_blank" style="font-size:11px;color:#C9A84C;text-decoration:none">→ boards_imperative.png</a>
+      </div>
+    </div>
+
+    <div class="app-card" style="--accent:#5AA8F0;cursor:default">
+      <div class="app-icon">📄</div>
+      <div class="app-name">Research Report Library</div>
+      <div class="app-desc">14+ branded institutional PDFs across audience segments. Boutique BD CEOs, buyside traders, CTOs, board directors, and more.</div>
+      <div class="app-tags">
+        <span class="tag live">14+ reports</span>
+        <span class="tag">ReportLab</span>
+        <span class="tag">PDF</span>
+      </div>
+      <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:.3rem">
+        <span style="font-size:11px;color:#6A85A8">The Burning Platform · The Augmented Trader</span>
+        <span style="font-size:11px;color:#6A85A8">Owned Not Rented · The Board's AI Imperative</span>
+        <span style="font-size:11px;color:#6A85A8">The Democratization Paradox · The Right Order</span>
+        <span style="font-size:11px;color:#6A85A8;margin-top:.25rem">→ Push to GitHub to make permanent</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="github-bar">
+    <div>
+      <div class="github-url">github.com/crcabana88-stack/quantex-social-assets</div>
+      <div class="github-note" style="margin-top:.25rem">All apps and assets auto-pushed here each session · Bookmark this page as your master index</div>
+    </div>
+    <a href="https://github.com/crcabana88-stack/quantex-social-assets" target="_blank" style="font-size:12px;font-weight:600;color:#C9A84C;text-decoration:none;border:1px solid rgba(201,168,76,.3);padding:6px 14px;border-radius:6px">View on GitHub →</a>
+  </div>
+
+</div>
+
+<footer>
+  <span>Quantex Technologies Inc. · Institutional intelligence, engineered</span>
+  <span>Carlos R. Cabana · ccabana@quantex-tech.com · quantex-tech.com</span>
+</footer>
+
+</body>
+</html>
