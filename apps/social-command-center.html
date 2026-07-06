@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantex Social Command Center</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --navy: #0A1928;
+    --navy-mid: #0F2340;
+    --navy-light: #1A3558;
+    --gold: #C9A84C;
+    --gold-dim: #8A6F32;
+    --gold-glow: rgba(201,168,76,0.15);
+    --white: #F0F4FF;
+    --muted: #6A85A8;
+    --border: rgba(201,168,76,0.2);
+    --green: #2DD4A0;
+    --red: #F06070;
+    --blue: #5AA8F0;
+    --purple: #A07AF0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--navy-mid);
+  }
+  .logo-lockup { display: flex; align-items: center; gap: .75rem; }
+  .logo-mark {
+    width: 32px; height: 32px;
+    display: grid; place-items: center;
+  }
+  .logo-mark svg { width: 28px; height: 28px; }
+  .logo-name { font-size: 15px; font-weight: 700; letter-spacing: .08em; color: var(--gold); }
+  .logo-sub { font-size: 11px; color: var(--muted); letter-spacing: .05em; margin-top: 1px; }
+  .header-right { display: flex; align-items: center; gap: 1rem; }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .live-label { font-size: 11px; color: var(--green); letter-spacing: .06em; font-weight: 600; }
+  .last-updated { font-size: 11px; color: var(--muted); }
+
+  /* ── Layout ── */
+  .app { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 65px); }
+
+  /* ── Sidebar ── */
+  nav {
+    background: var(--navy-mid);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 0;
+  }
+  .nav-section { font-size: 10px; color: var(--gold-dim); letter-spacing: .1em; font-weight: 600; padding: .5rem 1.25rem .25rem; text-transform: uppercase; }
+  .nav-item {
+    display: flex; align-items: center; gap: .65rem;
+    padding: .6rem 1.25rem; font-size: 13px; color: var(--muted);
+    cursor: pointer; transition: all .15s; border-left: 2px solid transparent;
+  }
+  .nav-item:hover { color: var(--white); background: rgba(255,255,255,.04); }
+  .nav-item.active { color: var(--gold); border-left-color: var(--gold); background: var(--gold-glow); }
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+  .nav-badge { margin-left: auto; font-size: 10px; background: var(--gold); color: var(--navy); border-radius: 10px; padding: 1px 6px; font-weight: 700; }
+
+  /* ── Main ── */
+  main { padding: 2rem; overflow-y: auto; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── KPI Row ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  .kpi-card {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    position: relative; overflow: hidden;
+  }
+  .kpi-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+  .kpi-label { font-size: 11px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-bottom: .5rem; }
+  .kpi-value { font-size: 2rem; font-weight: 700; color: var(--white); line-height: 1; }
+  .kpi-delta { font-size: 11px; margin-top: .4rem; }
+  .kpi-delta.up { color: var(--green); }
+  .kpi-delta.down { color: var(--red); }
+  .kpi-delta.flat { color: var(--muted); }
+
+  /* ── Section headers ── */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .section-title { font-size: 14px; font-weight: 600; color: var(--white); }
+  .section-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .btn {
+    font-size: 12px; font-weight: 500; padding: 6px 14px;
+    border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--gold); cursor: pointer;
+    transition: all .15s;
+  }
+  .btn:hover { background: var(--gold-glow); }
+  .btn.primary { background: var(--gold); color: var(--navy); border-color: var(--gold); font-weight: 700; }
+  .btn.primary:hover { background: #D4B05A; }
+
+  /* ── Post Queue ── */
+  .queue-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .queue-table th { text-align: left; font-size: 10px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; padding: .5rem 1rem; border-bottom: 1px solid var(--border); }
+  .queue-table td { padding: .75rem 1rem; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
+  .queue-table tr:hover td { background: rgba(255,255,255,.02); }
+  .platform-badge {
+    font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px;
+    letter-spacing: .04em; white-space: nowrap;
+  }
+  .p-li { background: rgba(10,102,194,.25); color: #5AB4F0; }
+  .p-tw { background: rgba(29,161,242,.2); color: #5AB4F0; }
+  .p-ig { background: rgba(225,48,108,.2); color: #F07898; }
+  .p-fb { background: rgba(24,119,242,.2); color: #5A88F0; }
+  .p-tk { background: rgba(255,0,80,.15); color: #F07898; }
+  .post-preview { max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+  .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; }
+  .status-scheduled { background: var(--gold); }
+  .status-live { background: var(--green); }
+  .status-draft { background: var(--muted); }
+  .action-btn { font-size: 11px; padding: 3px 10px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--muted); cursor: pointer; }
+  .action-btn:hover { color: var(--gold); border-color: var(--gold); }
+
+  /* ── Performance Chart ── */
+  .chart-container { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+  .chart-title { font-size: 13px; font-weight: 600; }
+  .chart-legend { display: flex; gap: 1rem; }
+  .legend-item { display: flex; align-items: center; gap: .4rem; font-size: 11px; color: var(--muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  canvas { width: 100% !important; }
+
+  /* ── Platform breakdown ── */
+  .platform-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  .platform-card {
+    background: var(--navy-mid); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.25rem;
+  }
+  .platform-name { font-size: 13px; font-weight: 600; margin-bottom: .75rem; display: flex; align-items: center; gap: .5rem; }
+  .platform-stat { display: flex; justify-content: space-between; margin-bottom: .4rem; }
+  .platform-stat-label { font-size: 11px; color: var(--muted); }
+  .platform-stat-val { font-size: 12px; font-weight: 600; }
+  .platform-bar { height: 4px; background: rgba(255,255,255,.08); border-radius: 2px; margin-top: .5rem; overflow: hidden; }
+  .platform-bar-fill { height: 100%; border-radius: 2px; background: var(--gold); transition: width .6s ease; }
+
+  /* ── Insights ── */
+  .insight-list { display: flex; flex-direction: column; gap: .75rem; }
+  .insight-card {
+    background: var(--navy-mid); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1rem 1.25rem;
+    display: flex; align-items: flex-start; gap: 1rem;
+  }
+  .insight-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .insight-text { font-size: 13px; line-height: 1.6; color: var(--muted); }
+  .insight-text strong { color: var(--white); }
+  .insight-action { font-size: 11px; color: var(--gold); margin-top: .35rem; cursor: pointer; }
+
+  /* ── Automation ── */
+  .automation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .auto-card {
+    background: var(--navy-mid); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.25rem;
+  }
+  .auto-title { font-size: 13px; font-weight: 600; margin-bottom: .5rem; display: flex; align-items: center; justify-content: space-between; }
+  .auto-desc { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 1rem; }
+  .toggle { display: flex; align-items: center; gap: .5rem; }
+  .toggle-switch {
+    width: 36px; height: 20px; border-radius: 10px; background: var(--navy-light);
+    position: relative; cursor: pointer; transition: background .2s;
+    border: 1px solid var(--border);
+  }
+  .toggle-switch.on { background: var(--gold); }
+  .toggle-switch::after {
+    content: ''; position: absolute; width: 14px; height: 14px;
+    border-radius: 50%; background: white; top: 2px; left: 2px; transition: left .2s;
+  }
+  .toggle-switch.on::after { left: 18px; }
+  .toggle-label { font-size: 11px; color: var(--muted); }
+
+  /* ── Content generator ── */
+  .generator-box {
+    background: var(--navy-mid); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .gen-title { font-size: 14px; font-weight: 600; margin-bottom: 1rem; }
+  .gen-row { display: flex; gap: .75rem; margin-bottom: .75rem; flex-wrap: wrap; }
+  .gen-select {
+    flex: 1; min-width: 140px; background: var(--navy); border: 1px solid var(--border);
+    color: var(--white); padding: .5rem .75rem; border-radius: 6px; font-size: 13px;
+    font-family: 'Inter', sans-serif;
+  }
+  .gen-input {
+    flex: 2; background: var(--navy); border: 1px solid var(--border);
+    color: var(--white); padding: .5rem .75rem; border-radius: 6px; font-size: 13px;
+    font-family: 'Inter', sans-serif;
+  }
+  .gen-output {
+    background: var(--navy); border: 1px solid var(--border); border-radius: 6px;
+    padding: 1rem; font-size: 13px; color: var(--muted); min-height: 80px;
+    line-height: 1.7; white-space: pre-wrap; font-family: 'Inter', sans-serif;
+    margin-top: .75rem;
+  }
+  .thinking { color: var(--gold); font-style: italic; }
+  .spinner { display: inline-block; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── News Feed ── */
+  .news-grid { display: flex; flex-direction: column; gap: .75rem; }
+  .news-card {
+    background: var(--navy-mid); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem 1.25rem;
+    display: flex; align-items: flex-start; gap: 1rem;
+  }
+  .news-source { font-size: 10px; color: var(--gold); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; margin-top: 2px; }
+  .news-headline { font-size: 13px; font-weight: 500; margin-bottom: .25rem; }
+  .news-hook { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .news-use { font-size: 11px; color: var(--gold); margin-top: .35rem; cursor: pointer; display: inline-block; }
+  .news-age { font-size: 10px; color: var(--muted); margin-top: .2rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-lockup">
+    <div class="logo-mark">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="8" cy="7" r="3" fill="#C9A84C"/>
+        <circle cx="8" cy="21" r="3" fill="#C9A84C"/>
+        <rect x="6.5" y="10" width="3" height="8" rx="1.5" fill="#C9A84C"/>
+        <circle cx="20" cy="14" r="3" fill="#C9A84C"/>
+        <rect x="11" y="12.5" width="6" height="3" rx="1.5" fill="#C9A84C"/>
+        <circle cx="14" cy="14" r="1.5" fill="#C9A84C"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-name">QUANTEX</div>
+      <div class="logo-sub">Social Command Center</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-dot"></div>
+    <span class="live-label">LIVE</span>
+    <span class="last-updated">Updated: <span id="now"></span></span>
+  </div>
+</header>
+
+<div class="app">
+  <nav>
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('queue')">
+      <span class="nav-icon">📅</span> Post Queue
+      <span class="nav-badge">11</span>
+    </div>
+    <div class="nav-section">Content</div>
+    <div class="nav-item" onclick="showPage('generator')">
+      <span class="nav-icon">✍️</span> AI Generator
+    </div>
+    <div class="nav-item" onclick="showPage('news')">
+      <span class="nav-icon">📡</span> News Hooks
+      <span class="nav-badge">6</span>
+    </div>
+    <div class="nav-section">Operations</div>
+    <div class="nav-item" onclick="showPage('performance')">
+      <span class="nav-icon">📈</span> Performance
+    </div>
+    <div class="nav-item" onclick="showPage('automation')">
+      <span class="nav-icon">⚙️</span> Automation
+    </div>
+    <div class="nav-item" onclick="showPage('insights')">
+      <span class="nav-icon">💡</span> Insights
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Performance Dashboard</div>
+          <div class="section-sub">Week of Jul 7–13, 2026 · 5 platforms · 11 posts scheduled</div>
+        </div>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn" onclick="showPage('generator')">+ New Post</button>
+          <button class="btn primary">Refresh Data</button>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Impressions (7d)</div>
+          <div class="kpi-value" id="kpi-impressions">—</div>
+          <div class="kpi-delta flat">Awaiting first posts</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Engagement Rate</div>
+          <div class="kpi-value" id="kpi-engagement">—</div>
+          <div class="kpi-delta flat">Target: >3.5%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Posts Scheduled</div>
+          <div class="kpi-value">11</div>
+          <div class="kpi-delta up">↑ +11 this session</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Platforms Active</div>
+          <div class="kpi-value">4</div>
+          <div class="kpi-delta flat">LI · TW · IG · FB</div>
+        </div>
+      </div>
+
+      <div class="platform-grid">
+        <div class="platform-card">
+          <div class="platform-name"><span style="color:#5AB4F0">in</span> LinkedIn</div>
+          <div class="platform-stat"><span class="platform-stat-label">Posts this week</span><span class="platform-stat-val">4</span></div>
+          <div class="platform-stat"><span class="platform-stat-label">Avg impressions</span><span class="platform-stat-val">—</span></div>
+          <div class="platform-stat"><span class="platform-stat-label">Best time</span><span class="platform-stat-val">8:30 AM ET</span></div>
+          <div class="platform-bar"><div class="platform-bar-fill" style="width:80%"></div></div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-name"><span style="color:#5AB4F0">𝕏</span> Twitter/X</div>
+          <div class="platform-stat"><span class="platform-stat-label">Posts this week</span><span class="platform-stat-val">4</span></div>
+          <div class="platform-stat"><span class="platform-stat-label">Avg impressions</span><span class="platform-stat-val">—</span></div>
+          <div class="platform-stat"><span class="platform-stat-label">Best time</span><span class="platform-stat-val">9:00 AM ET</span></div>
+          <div class="platform-bar"><div class="platform-bar-fill" style="width:55%"></div></div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-name"><span style="color:#F07898">◎</span> Instagram</div>
+          <div class="platform-stat"><span class="platform-stat-label">Posts this week</span><span class="platform-stat-val">2</span></div>
+          <div class="platform-stat"><span class="platform-stat-label">Avg impressions</span><span class="platform-stat-val">—</span></div>
+          <div class="platform-stat"><span class="platform-stat-label">Best time</span><span class="platform-stat-val">10:00 AM ET</span></div>
+          <div class="platform-bar"><div class="platform-bar-fill" style="width:40%"></div></div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-name"><span style="color:#5A88F0">f</span> Facebook</div>
+          <div class="platform-stat"><span class="platform-stat-label">Posts this week</span><span class="platform-stat-val">2</span></div>
+          <div class="platform-stat"><span class="platform-stat-label">Avg impressions</span><span class="platform-stat-val">—</span></div>
+          <div class="platform-stat"><span class="platform-stat-label">Best time</span><span class="platform-stat-val">8:00 AM ET</span></div>
+          <div class="platform-bar"><div class="platform-bar-fill" style="width:35%"></div></div>
+        </div>
+        <div class="platform-card">
+          <div class="platform-name"><span style="color:#F07898">♪</span> TikTok</div>
+          <div class="platform-stat"><span class="platform-stat-label">Posts this week</span><span class="platform-stat-val">0</span></div>
+          <div class="platform-stat"><span class="platform-stat-label">Requires media</span><span class="platform-stat-val">Video/Image</span></div>
+          <div class="platform-stat"><span class="platform-stat-label">Status</span><span class="platform-stat-val" style="color:var(--gold)">Pending graphic</span></div>
+          <div class="platform-bar"><div class="platform-bar-fill" style="width:10%"></div></div>
+        </div>
+        <div class="platform-card" style="border-color:rgba(201,168,76,.4);background:rgba(201,168,76,.05)">
+          <div class="platform-name"><span style="color:var(--gold)">★</span> Top Performer</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:.5rem">LinkedIn consistently drives the highest ICP engagement for institutional B2B content. Prioritize morning ET slots (8–9 AM) on Tue/Thu/Wed.</div>
+        </div>
+      </div>
+
+      <div class="insight-list">
+        <div class="insight-card">
+          <div class="insight-icon">🎯</div>
+          <div>
+            <div class="insight-text"><strong>11 posts scheduled across 4 platforms, Jul 7–13.</strong> All anchored to live regulatory news: Fed model risk gap, Treasury FS AI RMF, FINRA 2026 agentic AI warning, OCC cybersecurity report, Fannie/Freddie GSE requirements, Cambridge AI adoption data.</div>
+          </div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-icon">⚠️</div>
+          <div>
+            <div class="insight-text"><strong>TikTok requires video or image — 0 posts live.</strong> Upload a graphic to Blotato and schedule TikTok separately. The Wall Street AI hook ("82% of banks can't pass an AI controls review") is high-potential for short-form video.</div>
+            <div class="insight-action" onclick="showPage('generator')">→ Generate TikTok content</div>
+          </div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-icon">📎</div>
+          <div>
+            <div class="insight-text"><strong>5 branded graphics ready for upload.</strong> Go to my.blotato.com/schedule and attach the matching graphic to each post before it fires. LinkedIn posts: burning_platform_final.png and quantum_network_final.png.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POST QUEUE -->
+    <div class="page" id="page-queue">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Post Queue</div>
+          <div class="section-sub">11 posts scheduled · Jul 7–13, 2026</div>
+        </div>
+        <button class="btn primary" onclick="showPage('generator')">+ Generate Post</button>
+      </div>
+      <div style="background:var(--navy-mid);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <table class="queue-table">
+          <thead>
+            <tr>
+              <th>Date / Time ET</th>
+              <th>Platform</th>
+              <th>Report Hook</th>
+              <th>Preview</th>
+              <th>Status</th>
+              <th>Graphic</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="queue-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- AI GENERATOR -->
+    <div class="page" id="page-generator">
+      <div class="section-header">
+        <div>
+          <div class="section-title">AI Post Generator</div>
+          <div class="section-sub">Generate platform-optimized posts from your research reports + live news hooks</div>
+        </div>
+      </div>
+      <div class="generator-box">
+        <div class="gen-title">Generate New Post</div>
+        <div class="gen-row">
+          <select class="gen-select" id="gen-platform">
+            <option value="">Platform</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="twitter">Twitter/X</option>
+            <option value="instagram">Instagram</option>
+            <option value="facebook">Facebook</option>
+            <option value="tiktok">TikTok</option>
+          </select>
+          <select class="gen-select" id="gen-report">
+            <option value="">Research Report</option>
+            <option value="burning">The Burning Platform</option>
+            <option value="augmented">The Augmented Trader</option>
+            <option value="board">The Board's AI Imperative</option>
+            <option value="right">The Right Order</option>
+            <option value="democratization">The Democratization Paradox</option>
+            <option value="executive">The Intelligent Executive</option>
+            <option value="owned">Owned Not Rented (CTO)</option>
+          </select>
+          <select class="gen-select" id="gen-hook">
+            <option value="">News Hook</option>
+            <option value="fed">Fed: Model Risk Gap for Agentic AI</option>
+            <option value="finra">FINRA 2026: Agentic AI Top Risk</option>
+            <option value="treasury">Treasury FS AI RMF Released</option>
+            <option value="occ">OCC: AI Transforming Cyber Threat Surface</option>
+            <option value="gse">Fannie/Freddie AI Governance Requirements</option>
+            <option value="cambridge">Cambridge: 82% of Banks Fail AI Controls Review</option>
+          </select>
+        </div>
+        <div class="gen-row">
+          <input class="gen-input" id="gen-angle" placeholder="Optional: specific angle or talking point (e.g. 'focus on the HITL decision matrix')">
+          <button class="btn primary" onclick="generatePost()">Generate</button>
+        </div>
+        <div class="gen-output" id="gen-output">Select a platform, report, and news hook above to generate a post in Carlos's voice.</div>
+        <div style="display:flex;gap:.5rem;margin-top:.75rem" id="gen-actions" style="display:none">
+          <button class="btn primary" onclick="scheduleGenerated()" id="btn-schedule-gen" style="display:none">Schedule This Post</button>
+          <button class="btn" onclick="regenerate()" id="btn-regen" style="display:none">Regenerate</button>
+        </div>
+      </div>
+
+      <div style="background:var(--navy-mid);border:1px solid var(--border);border-radius:10px;padding:1.25rem">
+        <div class="section-title" style="margin-bottom:.75rem">Platform Character Limits</div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.75rem;font-size:12px">
+          <div style="text-align:center"><div style="color:var(--gold);font-weight:700;font-size:1.1rem">3,000</div><div style="color:var(--muted)">LinkedIn</div></div>
+          <div style="text-align:center"><div style="color:var(--gold);font-weight:700;font-size:1.1rem">280</div><div style="color:var(--muted)">Twitter/X</div></div>
+          <div style="text-align:center"><div style="color:var(--gold);font-weight:700;font-size:1.1rem">2,200</div><div style="color:var(--muted)">Instagram</div></div>
+          <div style="text-align:center"><div style="color:var(--gold);font-weight:700;font-size:1.1rem">63,206</div><div style="color:var(--muted)">Facebook</div></div>
+          <div style="text-align:center"><div style="color:var(--gold);font-weight:700;font-size:1.1rem">5 max</div><div style="color:var(--muted)">IG Hashtags</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEWS HOOKS -->
+    <div class="page" id="page-news">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Live News Hooks</div>
+          <div class="section-sub">Current regulatory and market events mapped to Quantex research reports</div>
+        </div>
+        <button class="btn" onclick="showPage('generator')">Use a Hook →</button>
+      </div>
+      <div class="news-grid" id="news-list"></div>
+    </div>
+
+    <!-- PERFORMANCE -->
+    <div class="page" id="page-performance">
+      <div class="section-header">
+        <div><div class="section-title">Performance Analytics</div><div class="section-sub">Connect your social accounts to populate live data</div></div>
+      </div>
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">Impressions by Platform (Projected)</div>
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#5AB4F0"></div>LinkedIn</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#5A88F0"></div>Twitter</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#F07898"></div>Instagram</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#A07AF0"></div>Facebook</div>
+          </div>
+        </div>
+        <canvas id="impressionsChart" height="200"></canvas>
+      </div>
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title">Engagement Rate Target vs Actual</div>
+        </div>
+        <canvas id="engagementChart" height="160"></canvas>
+      </div>
+      <div style="background:var(--navy-mid);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-top:1rem">
+        <div class="section-title" style="margin-bottom:.75rem">Performance Benchmarks — Institutional B2B</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;font-size:12px">
+          <div><div style="color:var(--muted);margin-bottom:.25rem">LinkedIn CTR</div><div style="font-weight:600;color:var(--gold)">0.44% avg → target 1%+</div></div>
+          <div><div style="color:var(--muted);margin-bottom:.25rem">LI Engagement</div><div style="font-weight:600;color:var(--gold)">2% avg → target 3.5%+</div></div>
+          <div><div style="color:var(--muted);margin-bottom:.25rem">Twitter Eng.</div><div style="font-weight:600;color:var(--gold)">0.5% avg → target 1.5%+</div></div>
+          <div><div style="color:var(--muted);margin-bottom:.25rem">Best post day</div><div style="font-weight:600;color:var(--gold)">Tue / Wed / Thu</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTOMATION -->
+    <div class="page" id="page-automation">
+      <div class="section-header">
+        <div><div class="section-title">Automation Rules</div><div class="section-sub">Configure your always-on content engine</div></div>
+      </div>
+      <div class="automation-grid">
+        <div class="auto-card">
+          <div class="auto-title">Weekly News Scan <div class="toggle"><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div><span class="toggle-label">ON</span></div></div>
+          <div class="auto-desc">Every Monday, Claude scans regulatory feeds (FINRA, SEC, OCC, Treasury, FCA) and surfaces 5–8 news hooks relevant to QHUB, AI governance, and capital markets. Mapped to your research reports automatically.</div>
+          <button class="btn" onclick="showPage('news')">View Current Hooks →</button>
+        </div>
+        <div class="auto-card">
+          <div class="auto-title">Post Generation <div class="toggle"><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div><span class="toggle-label">ON</span></div></div>
+          <div class="auto-desc">For each news hook, generate platform-optimized drafts across LinkedIn, Twitter, Instagram, and Facebook. Posts written in Carlos's voice — first-person, institutional, draws on 30 years of market experience.</div>
+          <button class="btn" onclick="showPage('generator')">Generate Now →</button>
+        </div>
+        <div class="auto-card">
+          <div class="auto-title">Graphic Matching <div class="toggle"><div class="toggle-switch" onclick="this.classList.toggle('on')"></div><span class="toggle-label">OFF</span></div></div>
+          <div class="auto-desc">Auto-match each post to the correct branded graphic from the v7 template series. Currently blocked by Blotato upload network restriction — enable when resolved or when graphics are pre-uploaded to Blotato media library.</div>
+        </div>
+        <div class="auto-card">
+          <div class="auto-title">Scheduling <div class="toggle"><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div><span class="toggle-label">ON</span></div></div>
+          <div class="auto-desc">Posts scheduled via Blotato API at optimal times per platform: LinkedIn 8:30 AM ET, Twitter 9 AM + 2 PM ET, Instagram 10 AM ET, Facebook 8 AM ET. Cadence: 2 posts/day max, no platform repeat within 24h.</div>
+        </div>
+        <div class="auto-card">
+          <div class="auto-title">Performance Review <div class="toggle"><div class="toggle-switch" onclick="this.classList.toggle('on')"></div><span class="toggle-label">OFF</span></div></div>
+          <div class="auto-desc">Every Sunday, pull post performance data and identify top/bottom performers. Adjust next week's content mix based on engagement data. Requires Blotato analytics API access.</div>
+        </div>
+        <div class="auto-card">
+          <div class="auto-title">Insight Alerts <div class="toggle"><div class="toggle-switch on" onclick="this.classList.toggle('on')"></div><span class="toggle-label">ON</span></div></div>
+          <div class="auto-desc">Flag posts that significantly outperform or underperform. Surface the hook, platform, and time slot as a signal for future content. Update this dashboard weekly with findings.</div>
+        </div>
+      </div>
+      <div style="margin-top:1.5rem;background:var(--gold-glow);border:1px solid var(--border);border-radius:10px;padding:1.25rem">
+        <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:.5rem">🎯 To fully automate: 3 steps remaining</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.8">
+          1. <strong style="color:var(--white)">Upload graphics to Blotato media library</strong> — go to my.blotato.com and upload the 5 branded PNGs. Then enable Graphic Matching above.<br>
+          2. <strong style="color:var(--white)">Connect analytics</strong> — enable the Blotato analytics API to pull live performance data into this dashboard.<br>
+          3. <strong style="color:var(--white)">Weekly check-in with Claude</strong> — paste this week's top/bottom posts and get next week's calendar adjusted in one session.
+        </div>
+      </div>
+    </div>
+
+    <!-- INSIGHTS -->
+    <div class="page" id="page-insights">
+      <div class="section-header">
+        <div><div class="section-title">Strategic Insights</div><div class="section-sub">Content intelligence for Quantex's GTM motion</div></div>
+      </div>
+      <div class="insight-list" id="insights-list"></div>
+    </div>
+
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+// ── State ──────────────────────────────────────────────────────
+const posts = [
+  { date:'Jul 7 · 8:30 AM', platform:'linkedin', hook:'The Burning Platform', preview:'The Fed just confirmed what we\'ve been saying...', status:'scheduled', graphic:'burning_platform_final.png' },
+  { date:'Jul 7 · 9:30 AM', platform:'twitter',  hook:'The Burning Platform', preview:'The Fed\'s model risk guidance doesn\'t cover agentic AI...', status:'scheduled', graphic:'burning_platform_final.png' },
+  { date:'Jul 8 · 9:00 AM', platform:'instagram', hook:'The Board\'s AI Imperative', preview:'The OCC just warned that AI is significantly transforming...', status:'scheduled', graphic:'boards_imperative_final.png' },
+  { date:'Jul 9 · 8:00 AM', platform:'facebook', hook:'The Right Order', preview:'Treasury just released the FS AI RMF...', status:'scheduled', graphic:'right_order_final.png' },
+  { date:'Jul 9 · 10:00 AM', platform:'twitter', hook:'The Right Order', preview:'Treasury\'s new FS AI RMF: 50% of banks...', status:'scheduled', graphic:'' },
+  { date:'Jul 10 · 8:30 AM', platform:'linkedin', hook:'The Burning Platform', preview:'FINRA\'s 2026 Regulatory Oversight Report just flagged...', status:'scheduled', graphic:'burning_platform_final.png' },
+  { date:'Jul 10 · 11:00 AM', platform:'twitter', hook:'The Burning Platform', preview:'FINRA 2026: agentic AI agents may act beyond...', status:'scheduled', graphic:'' },
+  { date:'Jul 11 · 9:00 AM', platform:'instagram', hook:'Democratization Paradox', preview:'Only 14% of financial institutions say AI is transformational...', status:'scheduled', graphic:'democratization_final.png' },
+  { date:'Jul 12 · 8:30 AM', platform:'linkedin', hook:'The Burning Platform', preview:'Freddie Mac and Fannie Mae now require documented AI governance...', status:'scheduled', graphic:'burning_platform_final.png' },
+  { date:'Jul 12 · 10:00 AM', platform:'twitter', hook:'The Burning Platform', preview:'Freddie Mac and Fannie Mae now require documented AI governance...', status:'scheduled', graphic:'' },
+  { date:'Jul 13 · 9:00 AM', platform:'facebook', hook:'Democratization Paradox', preview:'81% of financial services firms are adopting AI...', status:'scheduled', graphic:'democratization_final.png' },
+];
+
+const newsHooks = [
+  { source:'Federal Reserve', headline:'Model Risk Guidance Explicitly Excludes Agentic AI', age:'May 2026', hook:'82% of banks cannot pass an independent AI controls review in 90 days. The Fed just confirmed the governance gap is yours to fill.', report:'The Burning Platform', urgency:'🔴 High' },
+  { source:'FINRA', headline:'2026 Annual Report Flags Agentic AI as Top Emerging Risk', age:'Dec 2025', hook:'Agents may act "beyond the user\'s actual or intended scope." FINRA Rule 3110 applies. Your WSP needs to address this.', report:'The Burning Platform', urgency:'🔴 High' },
+  { source:'U.S. Treasury', headline:'Financial Services AI Risk Management Framework Released', age:'Feb 2026', hook:'Treasury released the FS AI RMF — adapted from NIST for capital markets. 50% of banks cite governance barriers as why AI fails.', report:'The Right Order', urgency:'🟡 Medium' },
+  { source:'OCC', headline:'AI "Significantly Transforming" Cybersecurity Threat Surface', age:'May 2026', hook:'OCC: banks deploying AI without governance are exposed on both the cyber and supervisory fronts simultaneously.', report:'The Board\'s AI Imperative', urgency:'🟡 Medium' },
+  { source:'Fannie Mae / Freddie Mac', headline:'AI Governance Now Required for Secondary Market Access', age:'Mar 2026', hook:'Freddie Mac effective Mar 3. Fannie LL-2026-04 followed. Governance is now a counterparty risk and revenue gating issue.', report:'The Burning Platform', urgency:'🟠 Active' },
+  { source:'Cambridge CCAF', headline:'2026 Global AI in FinServ: 81% Adopt, Only 14% Transformational', age:'May 2026', hook:'The execution and integration gap is massive. The firms that cross from adoption to transformation first will own the decade.', report:'The Democratization Paradox', urgency:'🟡 Medium' },
+];
+
+const insights = [
+  { icon:'🏆', text:'<strong>LinkedIn is your primary ICP channel.</strong> COOs, CCOs, Heads of Trading Technology, and board directors are LinkedIn-first. Weight 40% of content here. Morning slots (8–9 AM ET) on Tue/Thu outperform afternoon by ~2x for institutional B2B.', action:'Increase LinkedIn posts to 5/week next cycle' },
+  { icon:'⚡', text:'<strong>Regulatory news hooks are your strongest hook type.</strong> Posts anchored to a specific regulator (Fed, FINRA, OCC, Treasury) with a named data point ("82% of banks") outperform generic thought leadership by 3–5x on LinkedIn in institutional verticals.', action:'Always lead with a named regulatory event' },
+  { icon:'📏', text:'<strong>Twitter/X is for punchy signal, not explanation.</strong> Keep under 220 characters (not 280) to leave room for retweets with comment. One stat. One implication. One call to action.', action:'Review Twitter drafts for length before scheduling' },
+  { icon:'🖼️', text:'<strong>Branded graphics significantly increase reach.</strong> Upload your 5 v7 PNGs to Blotato before posts fire. Image posts see 2–3x higher impressions on LinkedIn and Instagram vs text-only.', action:'Upload graphics at my.blotato.com/schedule' },
+  { icon:'🎯', text:'<strong>TikTok requires video — highest ceiling for awareness.</strong> The "82% of banks can\'t pass an AI controls review" hook is a perfect 30-second TikTok. When you produce a HeyGen video, this is the first script to use.', action:'Queue TikTok video production via HeyGen' },
+  { icon:'📊', text:'<strong>Track 3 metrics weekly: impressions, engagement rate, and DM/comment quality.</strong> For QHUB, a thoughtful comment from a CCO or Head of Compliance is worth more than 500 likes from a general audience. Qualitative signal matters.', action:'Review comment quality every Sunday' },
+  { icon:'🔄', text:'<strong>Evergreen vs news-hook cadence: 60/40.</strong> 60% of posts should be evergreen (your research reports, first-person institutional takes). 40% should be news-reactive within 48 hours of a regulatory event. This cadence builds authority and relevance simultaneously.', action:'Maintain this ratio in the next content batch' },
+];
+
+// ── Navigation ──────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick')?.includes(id)) n.classList.add('active');
+  });
+}
+
+// ── Queue table ──────────────────────────────────────────────────
+function platformBadge(p) {
+  const map = { linkedin:'p-li', twitter:'p-tw', instagram:'p-ig', facebook:'p-fb', tiktok:'p-tk' };
+  const label = { linkedin:'LinkedIn', twitter:'Twitter/X', instagram:'Instagram', facebook:'Facebook', tiktok:'TikTok' };
+  return `<span class="platform-badge ${map[p]}">${label[p]}</span>`;
+}
+
+function buildQueue() {
+  const tbody = document.getElementById('queue-body');
+  tbody.innerHTML = posts.map((p, i) => `
+    <tr>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)">${p.date}</td>
+      <td>${platformBadge(p.platform)}</td>
+      <td style="font-size:12px;color:var(--gold)">${p.hook}</td>
+      <td class="post-preview">${p.preview}</td>
+      <td><span class="status-dot status-scheduled"></span><span style="font-size:11px;color:var(--muted)">Scheduled</span></td>
+      <td style="font-size:11px;color:${p.graphic ? 'var(--green)' : 'var(--red)'}">${p.graphic ? '✓ ' + p.graphic : '⚠ Upload needed'}</td>
+      <td><button class="action-btn">Edit</button></td>
+    </tr>
+  `).join('');
+}
+
+// ── News hooks ──────────────────────────────────────────────────
+function buildNews() {
+  document.getElementById('news-list').innerHTML = newsHooks.map(n => `
+    <div class="news-card">
+      <div style="min-width:80px">
+        <div class="news-source">${n.source}</div>
+        <div class="news-age">${n.age}</div>
+        <div style="margin-top:.35rem;font-size:12px">${n.urgency}</div>
+      </div>
+      <div>
+        <div class="news-headline">${n.headline}</div>
+        <div class="news-hook">${n.hook}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:.25rem">Maps to: <span style="color:var(--gold)">${n.report}</span></div>
+        <span class="news-use" onclick="useHook('${n.source}')">→ Use this hook in generator</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function useHook(source) { showPage('generator'); }
+
+// ── Insights ──────────────────────────────────────────────────
+function buildInsights() {
+  document.getElementById('insights-list').innerHTML = insights.map(i => `
+    <div class="insight-card">
+      <div class="insight-icon">${i.icon}</div>
+      <div>
+        <div class="insight-text">${i.text}</div>
+        <div class="insight-action">→ ${i.action}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── AI Generator ──────────────────────────────────────────────
+const templates = {
+  linkedin: {
+    burning: { fed: `The Fed just confirmed what we've been saying for two years.\n\nVice Chair Bowman's May 2026 remarks made it official: revised model risk guidance does NOT cover generative AI or agentic AI.\n\nThe regulator is telling financial institutions: govern yourself.\n\n82% of banking leaders cannot pass an independent review of their AI controls within 90 days.\n\nThat is not an edge case. That is the industry.\n\nQHUB closes that gap — a Compliance Rail inside the order flow, not next to it.\n\nEvery model. Every agent. Every decision. Logged, governed, auditable.\n\n#AIGovernance #FINRA #AgenticAI #QHUB #CapitalMarkets`,
+    finra: `FINRA's 2026 Annual Report just flagged agentic AI as its top emerging risk for broker-dealers.\n\nTheir words: AI agents may act "beyond the user's actual or intended scope and authority."\n\nOn a live institutional book, that sentence has a dollar amount attached to it.\n\nI spent 30 years on trading desks at Morgan Stanley, Bear Stearns, and CastleOak. I've seen what happens when a system moves outside its intended boundaries on a live position.\n\nQHUB's Human-in-the-Loop decision matrix is the answer to exactly the risk FINRA is describing.\n\nThe firms with governance infrastructure before the exam will own the narrative.\n\n#FINRA #BrokerDealer #AIGovernance #QHUB #ComplianceFirst` }},
+  twitter: {
+    burning: { fed: `The Fed's model risk guidance doesn't cover agentic AI.\n\n82% of banks can't pass an AI controls review in 90 days.\n\nThe regulator just told you: govern yourself.\n\nQHUB is how you do that. #AIGovernance #AgenticAI`,
+    finra: `FINRA 2026: agentic AI may act "beyond the user's actual or intended scope."\n\nOn a live book, that has a dollar amount attached.\n\nQHUB's HITL decision matrix is built for this.\n\n#FINRA #BrokerDealer #AIGovernance` }},
+};
+
+let lastGenerated = '';
+
+async function generatePost() {
+  const platform = document.getElementById('gen-platform').value;
+  const report = document.getElementById('gen-report').value;
+  const hook = document.getElementById('gen-hook').value;
+  const angle = document.getElementById('gen-angle').value;
+  const out = document.getElementById('gen-output');
+
+  if (!platform || !report) {
+    out.innerHTML = '<span style="color:var(--red)">Please select a platform and report first.</span>';
+    return;
+  }
+
+  out.innerHTML = '<span class="thinking"><span class="spinner">⟳</span> Generating in Carlos\'s voice...</span>';
+  document.getElementById('btn-schedule-gen').style.display = 'none';
+  document.getElementById('btn-regen').style.display = 'none';
+
+  // Try template first, then call Claude API
+  const tmpl = templates[platform]?.[report]?.[hook];
+  if (tmpl) {
+    await new Promise(r => setTimeout(r, 800));
+    out.textContent = tmpl;
+    lastGenerated = tmpl;
+    document.getElementById('btn-schedule-gen').style.display = 'inline-block';
+    document.getElementById('btn-regen').style.display = 'inline-block';
+    return;
+  }
+
+  // Call Claude API for unlisted combos
+  const platformLimits = { linkedin: 3000, twitter: 270, instagram: 2200, facebook: 5000, tiktok: 2200 };
+  const charLimit = platformLimits[platform] || 1000;
+  const hookTexts = {
+    fed: 'Fed Vice Chair Bowman confirmed (May 2026) that model risk guidance does NOT cover agentic AI, creating a gap institutions must fill themselves. 82% of banking leaders cannot pass an independent AI controls review.',
+    finra: 'FINRA 2026 Annual Report flagged agentic AI as top emerging risk. Agents may act "beyond the user\'s actual or intended scope." Rule 3110 applies.',
+    treasury: 'Treasury released the FS AI RMF (Feb 2026) — adapted from NIST for capital markets. 50% of banks cite governance barriers as why AI fails.',
+    occ: 'OCC (May 2026): AI is significantly transforming the cybersecurity threat surface for banks. Firms with governance infrastructure will be better positioned for supervisory expectations.',
+    gse: 'Freddie Mac AI governance requirements effective Mar 3, 2026. Fannie Mae LL-2026-04 followed. AI governance is now a secondary market counterparty risk issue.',
+    cambridge: 'Cambridge CCAF 2026: 81% of financial firms adopt AI, only 14% say it\'s transformational. Governance, data quality, and legacy architecture are the execution barriers.',
+  };
+  const reportTexts = {
+    burning: 'The Burning Platform — compliance gap, email threads as governance liability, QHUB Compliance Rail inside order flow',
+    augmented: 'The Augmented Trader — buyside trader information asymmetry, QHUB pre-trade intelligence, live axes, IOI routing',
+    board: "The Board's AI Imperative — fiduciary AI governance, model inventory, compliance audit trail, human escalation path",
+    right: 'The Right Order — Governance → Data → Model → Automation sequence, QHUB as operating system',
+    democratization: 'The Democratization Paradox — BlackRock Aladdin, JPMorgan LOXM, Goldman Marquee vs QHUB governance layer',
+    executive: 'The Intelligent Executive — CEO AI strategy ownership, accountability, liability',
+    owned: 'Owned Not Rented (CTO) — proprietary corpus, Build Provider Interface, seven portability rules, vendor independence',
+  };
+
+  const systemPrompt = `You are a social media ghostwriter for Carlos R. Cabana, CEO and Founder of Quantex Technologies. Write in first person as Carlos.
+
+Carlos has 30 years of institutional capital markets experience: Morgan Stanley, Bear Stearns (FX trading), CastleOak Securities, Cantor Fitzgerald, Knight Capital, Bloomberg LP. He is a FINRA-licensed professional (Series 7, 24, 63, 55, 3). Quantex is incubated at CEWIT, Stony Brook University.
+
+QHUB is Quantex's AI governance platform: a real-time Compliance Rail inside the order flow, model router, proprietary corpus, Human-in-the-Loop decision matrix, and tamper-evident audit trail.
+
+Voice: authoritative, direct, first-person institutional. Name real firms. Reference real regulatory events. Never generic. Always a specific stake or implication. End with a clear point or call to action.
+
+Platform rules:
+- LinkedIn: up to ${charLimit} chars. Long-form OK. Paragraphs. End with name + email.
+- Twitter: STRICT max 270 chars. One stat, one implication, one hashtag group. No filler.
+- Instagram: max 2200 chars, max 5 hashtags, conversational but professional.
+- Facebook: warm, accessible, conversational. Include email CTA.
+
+Respond ONLY with the post text. No explanation, no preamble.`;
+
+  const userPrompt = `Write a ${platform} post for Carlos.
+Report angle: ${reportTexts[report] || report}
+News hook: ${hookTexts[hook] || 'No specific hook — use evergreen institutional AI governance angle'}
+Additional angle: ${angle || 'none'}
+Max characters: ${charLimit}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content?.[0]?.text || 'Generation failed. Try again.';
+    out.textContent = text;
+    lastGenerated = text;
+    document.getElementById('btn-schedule-gen').style.display = 'inline-block';
+    document.getElementById('btn-regen').style.display = 'inline-block';
+  } catch(e) {
+    out.innerHTML = `<span style="color:var(--red)">API error: ${e.message}</span>`;
+  }
+}
+
+function regenerate() { generatePost(); }
+function scheduleGenerated() {
+  alert('Copy this post and schedule it via Blotato at my.blotato.com/schedule, or ask Claude to schedule it via the Blotato integration.');
+}
+
+// ── Charts ──────────────────────────────────────────────────────
+function buildCharts() {
+  const days = ['Mon Jul 7','Tue Jul 8','Wed Jul 9','Thu Jul 10','Fri Jul 11','Sat Jul 12','Sun Jul 13'];
+  const ctx1 = document.getElementById('impressionsChart').getContext('2d');
+  new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels: days,
+      datasets: [
+        { label:'LinkedIn', data:[0,0,0,0,0,0,0], backgroundColor:'rgba(90,180,240,.7)', borderRadius:4 },
+        { label:'Twitter', data:[0,0,0,0,0,0,0], backgroundColor:'rgba(90,136,240,.7)', borderRadius:4 },
+        { label:'Instagram', data:[0,0,0,0,0,0,0], backgroundColor:'rgba(240,120,152,.7)', borderRadius:4 },
+        { label:'Facebook', data:[0,0,0,0,0,0,0], backgroundColor:'rgba(160,122,240,.7)', borderRadius:4 },
+      ]
+    },
+    options: {
+      responsive:true, plugins:{ legend:{display:false} },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6A85A8',font:{size:11}}},
+        y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6A85A8',font:{size:11}},min:0}
+      }
+    }
+  });
+
+  const ctx2 = document.getElementById('engagementChart').getContext('2d');
+  new Chart(ctx2, {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [
+        { label:'Target', data:[3.5,3.5,3.5,3.5,3.5,3.5,3.5], borderColor:'rgba(201,168,76,.5)', borderDash:[5,5], pointRadius:0, fill:false },
+        { label:'Actual', data:[null,null,null,null,null,null,null], borderColor:'#2DD4A0', backgroundColor:'rgba(45,212,160,.1)', tension:.4, fill:true },
+      ]
+    },
+    options: {
+      responsive:true, plugins:{ legend:{display:false} },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6A85A8',font:{size:11}}},
+        y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6A85A8',font:{size:11},callback:v=>v+'%'},min:0,max:8}
+      }
+    }
+  });
+}
+
+// ── Clock ──────────────────────────────────────────────────────
+function updateClock() {
+  document.getElementById('now').textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/New_York'}) + ' ET';
+}
+
+// ── Init ──────────────────────────────────────────────────────
+buildQueue();
+buildNews();
+buildInsights();
+buildCharts();
+updateClock();
+setInterval(updateClock, 30000);
+</script>
+</body>
+</html>
