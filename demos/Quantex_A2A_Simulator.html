@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantex | A2A Institutional Trading Simulator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+:root {
+  --navy:#0A1628; --navy-mid:#0F1E38; --navy-light:#162845;
+  --border:#1E3554; --electric:#0066FF; --elec-dim:rgba(0,102,255,0.15);
+  --gold:#B0BAC8; --white:#E8EDF5; --green:#00D68F; --green-dim:rgba(0,214,143,0.1);
+  --amber:#FFB547; --red:#FF4D6A; --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy);color:var(--white);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border);background:rgba(10,22,40,0.97);position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
+.logo{font-weight:700;font-size:18px;letter-spacing:.1em;display:flex;align-items:center;gap:10px}
+.logo-mark{width:32px;height:32px;background:var(--electric);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.hbadge{font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:.06em;display:flex;align-items:center;gap:6px}
+.dot-live{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.main{max-width:1400px;margin:0 auto;padding:24px 32px;display:grid;grid-template-columns:1fr 380px;gap:24px}
+.center-col{display:flex;flex-direction:column;gap:20px}
+.right-col{display:flex;flex-direction:column;gap:16px}
+.panel{background:var(--navy-mid);border:1px solid var(--border);border-radius:8px;padding:20px}
+.panel-title{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--gold);margin-bottom:14px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.panel-title::before{content:'';display:inline-block;width:3px;height:14px;background:var(--electric);border-radius:2px}
+/* STEP FLOW */
+.steps-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.steps-title{font-size:15px;font-weight:600;color:var(--white)}
+.controls{display:flex;gap:8px;align-items:center}
+.btn{padding:7px 16px;border-radius:5px;border:none;cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.06em;transition:all .2s}
+.btn-primary{background:var(--electric);color:#fff}
+.btn-primary:hover{background:#0052CC}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--gold)}
+.btn-ghost:hover{border-color:var(--electric);color:var(--electric)}
+.speed-label{font-family:var(--mono);font-size:10px;color:var(--gold)}
+select.speed-sel{background:var(--navy-light);border:1px solid var(--border);color:var(--white);font-family:var(--mono);font-size:11px;padding:5px 8px;border-radius:4px;cursor:pointer}
+/* PIPELINE */
+.pipeline{display:flex;align-items:stretch;gap:0;margin-bottom:20px;overflow-x:auto;padding-bottom:4px}
+.pipe-step{flex:1;min-width:120px;display:flex;flex-direction:column;align-items:center;position:relative}
+.pipe-step:not(:last-child)::after{content:'→';position:absolute;right:-14px;top:28px;color:var(--border);font-size:18px;z-index:2;transition:color .4s}
+.pipe-step.active:not(:last-child)::after{color:var(--electric)}
+.pipe-step.done:not(:last-child)::after{color:var(--green)}
+.step-box{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:12px 8px;text-align:center;transition:all .35s;cursor:pointer;background:var(--navy)}
+.pipe-step.active .step-box{border-color:var(--electric);background:var(--elec-dim);box-shadow:0 0 20px rgba(0,102,255,0.2)}
+.pipe-step.done .step-box{border-color:var(--green);background:var(--green-dim)}
+.pipe-step.error .step-box{border-color:var(--red);background:rgba(255,77,106,0.1)}
+.step-num{font-family:var(--mono);font-size:10px;color:var(--gold);margin-bottom:4px}
+.step-icon{font-size:20px;margin-bottom:6px}
+.step-name{font-size:11px;font-weight:600;color:var(--white);line-height:1.3}
+.step-agent{font-family:var(--mono);font-size:9px;color:var(--gold);margin-top:3px}
+.step-status{font-family:var(--mono);font-size:9px;margin-top:5px;padding:2px 6px;border-radius:3px;display:inline-block}
+.status-pending{color:var(--gold);background:rgba(176,186,200,0.1)}
+.status-active{color:var(--electric);background:var(--elec-dim);animation:pulse-status 1s infinite}
+.status-done{color:var(--green);background:var(--green-dim)}
+.status-error{color:var(--red);background:rgba(255,77,106,0.1)}
+@keyframes pulse-status{0%,100%{opacity:1}50%{opacity:.5}}
+/* MESSAGE STREAM */
+.msg-stream{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px}
+.msg-stream::-webkit-scrollbar{width:4px}
+.msg-stream::-webkit-scrollbar-track{background:var(--navy)}
+.msg-stream::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.msg{padding:10px 14px;border-radius:6px;border-left:3px solid;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.msg-a2a{border-color:var(--electric);background:var(--elec-dim)}
+.msg-qhub{border-color:var(--amber);background:rgba(255,181,71,0.08)}
+.msg-hitl{border-color:var(--red);background:rgba(255,77,106,0.08)}
+.msg-settle{border-color:var(--green);background:var(--green-dim)}
+.msg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.msg-from{font-family:var(--mono);font-size:10px;font-weight:600}
+.msg-a2a .msg-from{color:var(--electric)}
+.msg-qhub .msg-from{color:var(--amber)}
+.msg-hitl .msg-from{color:var(--red)}
+.msg-settle .msg-from{color:var(--green)}
+.msg-time{font-family:var(--mono);font-size:9px;color:var(--gold)}
+.msg-body{font-size:12px;color:var(--white);line-height:1.5}
+.msg-tag{font-family:var(--mono);font-size:9px;padding:1px 5px;border-radius:2px;background:rgba(255,255,255,0.06);color:var(--gold)}
+/* JSON PAYLOAD */
+.json-box{background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:14px;font-family:var(--mono);font-size:10px;line-height:1.7;max-height:220px;overflow-y:auto;color:#8899BB}
+.json-key{color:var(--gold)}
+.json-str{color:var(--green)}
+.json-num{color:var(--amber)}
+.json-bool{color:var(--electric)}
+/* AGENTS */
+.agents-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.agent-card{background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:10px 12px;transition:all .3s}
+.agent-card.active{border-color:var(--electric);background:var(--elec-dim)}
+.agent-card.done{border-color:var(--green);background:var(--green-dim)}
+.agent-side{font-family:var(--mono);font-size:9px;color:var(--gold);margin-bottom:3px}
+.agent-name{font-size:11px;font-weight:600;color:var(--white)}
+.agent-state{font-family:var(--mono);font-size:9px;margin-top:3px}
+.agent-card.active .agent-state{color:var(--electric)}
+.agent-card.done .agent-state{color:var(--green)}
+.agent-card:not(.active):not(.done) .agent-state{color:var(--gold)}
+/* AUDIT */
+.audit-rows{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto}
+.audit-row{display:flex;gap:10px;align-items:flex-start;padding:7px 10px;background:var(--navy);border-radius:5px;border-left:2px solid var(--border);font-family:var(--mono);font-size:10px;animation:fadeIn .3s ease}
+.audit-row.ok{border-color:var(--green)}
+.audit-row.warn{border-color:var(--amber)}
+.audit-row.info{border-color:var(--electric)}
+.audit-t{color:var(--gold);white-space:nowrap;min-width:55px}
+.audit-hash{color:var(--border)}
+.audit-desc{color:var(--white);flex:1}
+/* PROGRESS BAR */
+.progress-wrap{background:var(--navy);border-radius:4px;height:4px;margin-bottom:16px}
+.progress-bar{background:linear-gradient(90deg,var(--electric),var(--green));border-radius:4px;height:100%;transition:width .5s ease}
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.metric{background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center}
+.metric-val{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--electric)}
+.metric-label{font-size:10px;color:var(--gold);margin-top:2px}
+/* FIX VS A2A TOGGLE */
+.compare-toggle{display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:14px}
+.toggle-btn{flex:1;padding:8px;font-family:var(--mono);font-size:11px;border:none;cursor:pointer;transition:all .2s;letter-spacing:.04em}
+.toggle-btn.active-fix{background:#FF4D6A;color:#fff}
+.toggle-btn.active-a2a{background:var(--electric);color:#fff}
+.toggle-btn:not(.active-fix):not(.active-a2a){background:var(--navy);color:var(--gold)}
+.compare-panel{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.compare-col{background:var(--navy);border-radius:6px;padding:12px}
+.compare-head{font-family:var(--mono);font-size:11px;font-weight:600;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.fix-head{color:var(--red)}
+.a2a-head{color:var(--electric)}
+.compare-row{display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid rgba(30,53,84,0.5)}
+.compare-row:last-child{border:none}
+.compare-label{color:var(--gold)}
+.compare-fix{color:var(--red)}
+.compare-a2a{color:var(--green)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-mark">⬡</div>
+    QUANTEX
+  </div>
+  <div class="hbadge">
+    <div class="dot-live"></div>
+    A2A INSTITUTIONAL TRADING SIMULATOR — LIVE
+  </div>
+  <div class="hbadge">CEWIT · STONY BROOK UNIVERSITY</div>
+</header>
+
+<div class="main">
+  <div class="center-col">
+
+    <!-- PIPELINE STEPS -->
+    <div class="panel">
+      <div class="steps-header">
+        <div class="steps-title">A2A Order Execution Flow — 6 Steps · 12 Agents</div>
+        <div class="controls">
+          <span class="speed-label">SPEED</span>
+          <select class="speed-sel" id="speedSel">
+            <option value="2000">1x</option>
+            <option value="1000" selected>2x</option>
+            <option value="500">4x</option>
+            <option value="200">8x</option>
+          </select>
+          <button class="btn btn-ghost" onclick="resetSim()">RESET</button>
+          <button class="btn btn-primary" id="runBtn" onclick="toggleSim()">▶ RUN</button>
+        </div>
+      </div>
+      <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+      <div class="pipeline" id="pipeline"></div>
+      <div class="metrics">
+        <div class="metric"><div class="metric-val" id="m-latency">—</div><div class="metric-label">LATENCY</div></div>
+        <div class="metric"><div class="metric-val" id="m-agents">0/12</div><div class="metric-label">AGENTS ACTIVE</div></div>
+        <div class="metric"><div class="metric-val" id="m-msgs">0</div><div class="metric-label">A2A MESSAGES</div></div>
+      </div>
+    </div>
+
+    <!-- MESSAGE STREAM -->
+    <div class="panel">
+      <div class="panel-title">A2A Message Stream</div>
+      <div class="msg-stream" id="msgStream">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--gold);text-align:center;padding:20px">
+          Press RUN to begin simulation
+        </div>
+      </div>
+    </div>
+
+    <!-- JSON PAYLOAD -->
+    <div class="panel">
+      <div class="panel-title">Live A2A Message Payload</div>
+      <div class="json-box" id="jsonBox">
+        <span style="color:var(--gold)">// Waiting for first A2A task message...</span>
+      </div>
+    </div>
+
+    <!-- FIX vs A2A -->
+    <div class="panel">
+      <div class="panel-title">FIX Protocol vs A2A — Why This Matters</div>
+      <div class="compare-panel">
+        <div class="compare-col">
+          <div class="compare-head fix-head">FIX Protocol (1992)</div>
+          <div class="compare-row"><span class="compare-label">Format</span><span class="compare-fix">Tag-value pairs</span></div>
+          <div class="compare-row"><span class="compare-label">Connectivity</span><span class="compare-fix">Bilateral sessions</span></div>
+          <div class="compare-row"><span class="compare-label">Certification</span><span class="compare-fix">Per-counterparty</span></div>
+          <div class="compare-row"><span class="compare-label">Intent</span><span class="compare-fix">None — instruction only</span></div>
+          <div class="compare-row"><span class="compare-label">AI Context</span><span class="compare-fix">Discarded at boundary</span></div>
+          <div class="compare-row"><span class="compare-label">Governance</span><span class="compare-fix">External / manual</span></div>
+          <div class="compare-row"><span class="compare-label">Annual Cost</span><span class="compare-fix">$2–4B industry</span></div>
+        </div>
+        <div class="compare-col">
+          <div class="compare-head a2a-head">A2A + QHUB (2025)</div>
+          <div class="compare-row"><span class="compare-label">Format</span><span class="compare-a2a">JSON Agent Cards</span></div>
+          <div class="compare-row"><span class="compare-label">Connectivity</span><span class="compare-a2a">Auto-discovery</span></div>
+          <div class="compare-row"><span class="compare-label">Certification</span><span class="compare-a2a">Zero — self-describing</span></div>
+          <div class="compare-row"><span class="compare-label">Intent</span><span class="compare-a2a">Full context travels</span></div>
+          <div class="compare-row"><span class="compare-label">AI Context</span><span class="compare-a2a">Preserved end-to-end</span></div>
+          <div class="compare-row"><span class="compare-label">Governance</span><span class="compare-a2a">QHUB embedded</span></div>
+          <div class="compare-row"><span class="compare-label">Annual Cost</span><span class="compare-a2a">90% reducible</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="right-col">
+
+    <!-- AGENTS -->
+    <div class="panel">
+      <div class="panel-title">12 Agents — Buy-Side & Sell-Side</div>
+      <div class="agents-grid" id="agentsGrid"></div>
+    </div>
+
+    <!-- QHUB GOVERNANCE -->
+    <div class="panel">
+      <div class="panel-title">QHUB Governance Layer</div>
+      <div id="govStatus" style="font-family:var(--mono);font-size:11px;color:var(--gold);margin-bottom:10px">
+        ● CONTROL PLANE STANDBY
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:var(--navy);border-radius:5px;padding:10px;text-align:center">
+          <div style="font-family:var(--mono);font-size:16px;font-weight:600;color:var(--amber)" id="hitl-pending">0</div>
+          <div style="font-size:10px;color:var(--gold);margin-top:2px">HITL PENDING</div>
+        </div>
+        <div style="background:var(--navy);border-radius:5px;padding:10px;text-align:center">
+          <div style="font-family:var(--mono);font-size:16px;font-weight:600;color:var(--green)" id="ips-checks">0</div>
+          <div style="font-size:10px;color:var(--gold);margin-top:2px">IPS CHECKS PASSED</div>
+        </div>
+        <div style="background:var(--navy);border-radius:5px;padding:10px;text-align:center">
+          <div style="font-family:var(--mono);font-size:16px;font-weight:600;color:var(--electric)" id="audit-count">0</div>
+          <div style="font-size:10px;color:var(--gold);margin-top:2px">AUDIT ENTRIES</div>
+        </div>
+        <div style="background:var(--navy);border-radius:5px;padding:10px;text-align:center">
+          <div style="font-family:var(--mono);font-size:16px;font-weight:600;color:var(--red)" id="breach-count">0</div>
+          <div style="font-size:10px;color:var(--gold);margin-top:2px">BREACHES BLOCKED</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT LEDGER -->
+    <div class="panel">
+      <div class="panel-title">Immutable Audit Ledger</div>
+      <div class="audit-rows" id="auditRows">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--gold);text-align:center;padding:10px">
+          Awaiting events...
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const STEPS = [
+  { id:1, name:"Morning Axes", icon:"📊", agent:"PM Intelligence Agent", side:"Buy-Side",
+    agents:["PM Intelligence Agent","Research Synthesis Agent"],
+    msgType:"a2a", hitl:false,
+    msg:"Buy-side PM Intelligence Agent publishes morning axes via A2A Agent Card. AAPL 50K shares, target impact <8bps, completion by 14:30 ET.",
+    payload:{protocol:"A2A/1.0",task_id:"T-20260707-0645",from_agent:"pm-intelligence@buyside.qhub",to_agent:"execution@sellside.qhub","agent_card_url":"https://buyside.qhub/.well-known/agent.json",intent:{action:"EXECUTE",symbol:"AAPL",side:"BUY",quantity:50000,max_impact_bps:8,complete_by:"14:30:00ET",venue_preference:["DARK","LIT"],authorization:"trader-approved"},qhub_governance:{ips_validated:true,hitl_tier:"T1-AUTO",audit_hash:"sha256:a4f2..."}},
+    auditEntry:{type:"ok",desc:"A2A task published — AAPL 50K BUY intent broadcast"} },
+  { id:2, name:"IPS Validation", icon:"🔒", agent:"QHUB Control Plane", side:"Governance",
+    agents:["QHUB Control Plane","Compliance Monitor Agent"],
+    msgType:"qhub", hitl:false,
+    msg:"QHUB Control Plane evaluates order against IPS rules in <1ms. Position limits, sector concentration, restricted list — all clear. Bytecode compiled rule evaluation.",
+    payload:{protocol:"QHUB/CONTROL-PLANE",event:"IPS_EVALUATION",timestamp:"T+0.8ms",rule_engine:"bytecode-compiled",checks_run:["position_limit","sector_concentration","restricted_list","counterparty_approval"],result:"PASS",evaluation_time_ms:0.8,next_action:"ROUTE_TO_EXECUTION"},
+    auditEntry:{type:"ok",desc:"IPS validated — 4 rules passed in 0.8ms"} },
+  { id:3, name:"Algo Selection", icon:"⚡", agent:"Pre-Trade TCA Agent", side:"Buy-Side",
+    agents:["Pre-Trade TCA Agent","Algo Monitor Agent"],
+    msgType:"a2a", hitl:false,
+    msg:"Pre-Trade TCA Agent recommends VWAP algo with dark pool priority. A2A message carries full execution context to sell-side algo selection engine.",
+    payload:{protocol:"A2A/1.0",task_id:"T-20260707-0645-EXEC",intent:{action:"SELECT_ALGO",symbol:"AAPL",recommended_algo:"VWAP",venue_sequence:["IEX_DARK","BATS_DARK","NYSE_LIT"],participation_rate_max:0.12,vwap_benchmark:"D-VWAP",risk_budget_bps:8},tca_pre_trade:{expected_impact_bps:5.2,completion_probability:0.94}},
+    auditEntry:{type:"info",desc:"VWAP algo selected — dark pool priority, 12% ADV cap"} },
+  { id:4, name:"HITL Review", icon:"👤", agent:"Trader Approval Gate", side:"Governance",
+    agents:["Trader Approval Gate","QHUB HITL Router"],
+    msgType:"hitl", hitl:true,
+    msg:"QHUB routes to HITL Tier 2 — order size >$9M triggers trader review. Trader approves in 23 seconds. Approval logged to immutable audit ledger with timestamp.",
+    payload:{protocol:"QHUB/HITL",event:"TIER2_REVIEW_REQUIRED",reason:"ORDER_SIZE_THRESHOLD",threshold_usd:9000000,order_value_usd:9267500,presented_to:"trader_001",decision:"APPROVED",decision_time_seconds:23,approval_hash:"sha256:b7c3..."},
+    auditEntry:{type:"warn",desc:"HITL T2 triggered — trader approved in 23s"} },
+  { id:5, name:"Execution & TCA", icon:"📈", agent:"Execution Agent", side:"Sell-Side",
+    agents:["Execution Agent","Broker Commission Agent"],
+    msgType:"a2a", hitl:false,
+    msg:"Sell-side Execution Agent fills 50,000 AAPL across IEX dark, BATS dark, and NYSE lit. A2A Algo Monitor signals VWAP deviation +2.1bps — within budget. Full fill at 14:22 ET.",
+    payload:{protocol:"A2A/1.0",task_id:"T-20260707-0645-FILL",event:"EXECUTION_COMPLETE",fills:[{venue:"IEX_DARK",qty:21000,price:185.44,time:"13:48:22"},{venue:"BATS_DARK",qty:18000,price:185.47,time:"14:01:15"},{venue:"NYSE_LIT",qty:11000,price:185.52,time:"14:22:08"}],vwap_achieved:185.473,vwap_deviation_bps:2.1,market_impact_bps:4.8,completion_time:"14:22:08ET"},
+    auditEntry:{type:"ok",desc:"50K AAPL filled — impact 4.8bps, VWAP dev +2.1bps"} },
+  { id:6, name:"Settlement (AP2)", icon:"✅", agent:"AP2 Settlement Agent", side:"Both",
+    agents:["AP2 Settlement Agent","CTM Allocation Agent"],
+    msgType:"settle", hitl:false,
+    msg:"AP2 protocol generates cryptographically-signed trade confirmation. CTM allocation auto-matched. DTC settlement instruction generated. Full audit trail: 847 events, exportable in 4 seconds.",
+    payload:{protocol:"AP2/1.0",event:"SETTLEMENT_COMPLETE",trade_id:"TRD-20260707-A2A-9921",cryptographic_confirmation:{terms_hash:"sha256:d9e1...",signed_by:["buyside_agent","sellside_agent"],timestamp:"14:22:09ET"},ctm_match:"AUTO",dtc_instruction:"GENERATED",audit_trail:{total_events:847,export_time_seconds:4,regulatory_ready:true}},
+    auditEntry:{type:"ok",desc:"AP2 settlement complete — 847 audit events, DTC ready"} }
+];
+
+const AGENTS = [
+  {name:"PM Intelligence",side:"BUY-SIDE",steps:[1]},{name:"Research Synthesis",side:"BUY-SIDE",steps:[1]},
+  {name:"Pre-Trade TCA",side:"BUY-SIDE",steps:[3]},{name:"Algo Monitor",side:"BUY-SIDE",steps:[3,5]},
+  {name:"QHUB Control Plane",side:"GOVERNANCE",steps:[2,4]},{name:"Compliance Monitor",side:"GOVERNANCE",steps:[2]},
+  {name:"HITL Router",side:"GOVERNANCE",steps:[4]},{name:"Trader Approval",side:"GOVERNANCE",steps:[4]},
+  {name:"Execution Agent",side:"SELL-SIDE",steps:[5]},{name:"Broker Commission",side:"SELL-SIDE",steps:[5]},
+  {name:"AP2 Settlement",side:"BOTH",steps:[6]},{name:"CTM Allocation",side:"BOTH",steps:[6]}
+];
+
+let currentStep=0, running=false, timer=null, msgCount=0, auditCount=0, ipsCount=0, hitlCount=0, breachCount=0;
+
+function initUI(){
+  const pg = document.getElementById('pipeline');
+  pg.innerHTML = STEPS.map((s,i)=>`
+    <div class="pipe-step" id="step-${s.id}">
+      <div class="step-box" onclick="jumpStep(${i})">
+        <div class="step-num">STEP ${s.id}</div>
+        <div class="step-icon">${s.icon}</div>
+        <div class="step-name">${s.name}</div>
+        <div class="step-agent">${s.agent}</div>
+        <div class="step-status status-pending" id="sstatus-${s.id}">PENDING</div>
+      </div>
+    </div>`).join('');
+
+  const ag = document.getElementById('agentsGrid');
+  ag.innerHTML = AGENTS.map((a,i)=>`
+    <div class="agent-card" id="ag-${i}">
+      <div class="agent-side">${a.side}</div>
+      <div class="agent-name">${a.name}</div>
+      <div class="agent-state">STANDBY</div>
+    </div>`).join('');
+}
+
+function jumpStep(idx){if(!running){currentStep=idx;applyStep(idx)}}
+
+function toggleSim(){
+  if(running){clearInterval(timer);running=false;document.getElementById('runBtn').textContent='▶ RUN'}
+  else{
+    if(currentStep>=STEPS.length)resetSim();
+    running=true;document.getElementById('runBtn').textContent='⏸ PAUSE';
+    runStep();
+  }
+}
+
+function runStep(){
+  if(currentStep>=STEPS.length){running=false;document.getElementById('runBtn').textContent='▶ DONE';return}
+  applyStep(currentStep);
+  const spd=parseInt(document.getElementById('speedSel').value);
+  timer=setTimeout(()=>{currentStep++;if(running)runStep()},spd);
+}
+
+function applyStep(idx){
+  const s=STEPS[idx];
+  // Update pipeline
+  STEPS.forEach((st,i)=>{
+    const el=document.getElementById(`step-${st.id}`);
+    const ss=document.getElementById(`sstatus-${st.id}`);
+    if(i<idx){el.className='pipe-step done';ss.className='step-status status-done';ss.textContent='✓ DONE'}
+    else if(i===idx){el.className='pipe-step active';ss.className='step-status status-active';ss.textContent='● ACTIVE'}
+    else{el.className='pipe-step';ss.className='step-status status-pending';ss.textContent='PENDING'}
+  });
+  // Progress
+  document.getElementById('progressBar').style.width=`${((idx+1)/STEPS.length)*100}%`;
+  // Metrics
+  document.getElementById('m-latency').textContent=`${(idx*2.1+0.8).toFixed(1)}ms`;
+  document.getElementById('m-agents').textContent=`${Math.min((idx+1)*2,12)}/12`;
+  document.getElementById('m-msgs').textContent=++msgCount;
+  // Agents
+  AGENTS.forEach((a,i)=>{
+    const el=document.getElementById(`ag-${i}`);
+    const isActive=a.steps.includes(s.id);
+    const isDone=a.steps.every(st=>st<s.id);
+    el.className=`agent-card${isActive?' active':isDone?' done':''}`;
+    el.querySelector('.agent-state').textContent=isActive?'● PROCESSING':isDone?'✓ COMPLETE':'STANDBY';
+  });
+  // Message stream
+  const stream=document.getElementById('msgStream');
+  if(idx===0)stream.innerHTML='';
+  const div=document.createElement('div');
+  div.className=`msg msg-${s.msgType}`;
+  div.innerHTML=`
+    <div class="msg-header">
+      <span class="msg-from">${s.agent}</span>
+      <span class="msg-time">T+${(idx*1.1).toFixed(1)}s <span class="msg-tag">${s.msgType.toUpperCase()}</span></span>
+    </div>
+    <div class="msg-body">${s.msg}</div>`;
+  stream.appendChild(div);
+  stream.scrollTop=stream.scrollHeight;
+  // JSON payload
+  document.getElementById('jsonBox').innerHTML=syntaxHL(JSON.stringify(s.payload,null,2));
+  // QHUB governance
+  if(s.hitl)hitlCount++;
+  if(s.msgType==='qhub'||s.msgType==='hitl'){ipsCount++}
+  auditCount++;
+  document.getElementById('hitl-pending').textContent=hitlCount;
+  document.getElementById('ips-checks').textContent=ipsCount;
+  document.getElementById('audit-count').textContent=auditCount;
+  document.getElementById('breach-count').textContent=breachCount;
+  document.getElementById('govStatus').textContent=
+    s.hitl?'🔴 HITL REVIEW IN PROGRESS':s.msgType==='qhub'?'🟡 IPS EVALUATION ACTIVE':'🟢 CONTROL PLANE MONITORING';
+  // Audit ledger
+  const ar=document.getElementById('auditRows');
+  if(idx===0)ar.innerHTML='';
+  const ae=s.auditEntry;
+  const arow=document.createElement('div');
+  arow.className=`audit-row ${ae.type}`;
+  arow.innerHTML=`<span class="audit-t">T+${(idx*1.1).toFixed(1)}s</span>
+    <span class="audit-hash">#${Math.random().toString(36).substr(2,6)}</span>
+    <span class="audit-desc">${ae.desc}</span>`;
+  ar.appendChild(arow);
+  ar.scrollTop=ar.scrollHeight;
+}
+
+function syntaxHL(json){
+  return json.replace(/("[\w_]+"):/g,'<span class="json-key">$1</span>:')
+    .replace(/: (".*?")/g,': <span class="json-str">$1</span>')
+    .replace(/: (\d+\.?\d*)/g,': <span class="json-num">$1</span>')
+    .replace(/: (true|false)/g,': <span class="json-bool">$1</span>');
+}
+
+function resetSim(){
+  clearTimeout(timer);running=false;currentStep=0;msgCount=0;auditCount=0;ipsCount=0;hitlCount=0;
+  document.getElementById('runBtn').textContent='▶ RUN';
+  document.getElementById('progressBar').style.width='0%';
+  document.getElementById('m-latency').textContent='—';
+  document.getElementById('m-agents').textContent='0/12';
+  document.getElementById('m-msgs').textContent='0';
+  document.getElementById('hitl-pending').textContent='0';
+  document.getElementById('ips-checks').textContent='0';
+  document.getElementById('audit-count').textContent='0';
+  document.getElementById('breach-count').textContent='0';
+  document.getElementById('govStatus').textContent='● CONTROL PLANE STANDBY';
+  document.getElementById('msgStream').innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--gold);text-align:center;padding:20px">Press RUN to begin simulation</div>';
+  document.getElementById('jsonBox').innerHTML='<span style="color:var(--gold)">// Waiting for first A2A task message...</span>';
+  document.getElementById('auditRows').innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--gold);text-align:center;padding:10px">Awaiting events...</div>';
+  STEPS.forEach(s=>{
+    document.getElementById(`step-${s.id}`).className='pipe-step';
+    const ss=document.getElementById(`sstatus-${s.id}`);
+    ss.className='step-status status-pending';ss.textContent='PENDING';
+  });
+  AGENTS.forEach((_,i)=>{
+    const el=document.getElementById(`ag-${i}`);
+    el.className='agent-card';
+    el.querySelector('.agent-state').textContent='STANDBY';
+  });
+}
+
+initUI();
+</script>
+</body>
+</html>
