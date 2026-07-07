@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantex | Post-FIX Connectivity Stack — Live Demo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+:root{
+  --navy:#0A1628;--nm:#0F1E38;--nl:#162845;--bd:#1E3554;
+  --el:#0066FF;--ed:rgba(0,102,255,0.15);--eg:rgba(0,102,255,0.4);
+  --gold:#B0BAC8;--white:#E8EDF5;--green:#00D68F;--gd:rgba(0,214,143,0.1);
+  --amber:#FFB547;--red:#FF4D6A;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy);color:var(--white);font-family:var(--sans);min-height:100vh}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--bd);background:rgba(10,22,40,0.97);position:sticky;top:0;z-index:100}
+.logo{font-weight:700;font-size:18px;letter-spacing:.1em;display:flex;align-items:center;gap:10px}
+.lm{width:32px;height:32px;background:linear-gradient(135deg,var(--el),#00D68F);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.hb{font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:.06em;display:flex;align-items:center;gap:6px}
+.dl{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hero{padding:32px;border-bottom:1px solid var(--bd);background:linear-gradient(180deg,var(--nm) 0%,var(--navy) 100%)}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;max-width:1300px;margin:0 auto}
+.hero-left h1{font-size:28px;font-weight:700;line-height:1.2;margin-bottom:8px}
+.hero-left h1 span{color:var(--el)}
+.hero-sub{font-size:14px;color:var(--gold);line-height:1.6;margin-bottom:20px}
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.hstat{background:var(--nl);border:1px solid var(--bd);border-radius:6px;padding:12px;text-align:center}
+.hstat-val{font-family:var(--mono);font-size:20px;font-weight:600;color:var(--el)}
+.hstat-lab{font-size:10px;color:var(--gold);margin-top:2px}
+/* STACK LAYERS */
+.stack-section{max-width:1300px;margin:0 auto;padding:24px 32px}
+.section-label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--gold);margin-bottom:16px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.section-label::before{content:'';display:inline-block;width:3px;height:14px;background:var(--el);border-radius:2px}
+.layers{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}
+.layer{border-radius:8px;border:1.5px solid;padding:16px 20px;display:flex;align-items:center;gap:20px;cursor:pointer;transition:all .25s}
+.layer-l0{border-color:var(--bd);background:var(--nm)}
+.layer-l1{border-color:#1A5C3A;background:rgba(26,92,58,0.15)}
+.layer-l2{border-color:#2A4A7F;background:rgba(42,74,127,0.15)}
+.layer-l3{border-color:var(--el);background:var(--ed)}
+.layer-l4{border-color:#6B3A7F;background:rgba(107,58,127,0.15)}
+.layer-l5{border-color:var(--amber);background:rgba(255,181,71,0.08)}
+.layer.selected{box-shadow:0 0 24px rgba(0,102,255,0.25)}
+.layer-num{font-family:var(--mono);font-size:13px;font-weight:600;min-width:28px;color:var(--gold)}
+.layer-icon{font-size:22px;min-width:32px;text-align:center}
+.layer-info{flex:1}
+.layer-name{font-size:14px;font-weight:600;margin-bottom:2px}
+.layer-desc{font-size:12px;color:var(--gold);line-height:1.4}
+.layer-owner{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:3px;background:rgba(255,255,255,0.06);white-space:nowrap}
+.owner-ct{color:#00D68F;background:rgba(0,214,143,0.1)}
+.owner-qh{color:var(--el);background:var(--ed)}
+.owner-cl{color:var(--amber);background:rgba(255,181,71,0.1)}
+/* LIVE DEMO */
+.demo-wrap{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px}
+.terminal{background:#000;border:1px solid var(--bd);border-radius:8px;padding:0;overflow:hidden}
+.terminal-bar{background:#1A1A2E;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--bd)}
+.tbar-dot{width:10px;height:10px;border-radius:50%}
+.tbar-title{font-family:var(--mono);font-size:11px;color:var(--gold);margin-left:8px;flex:1}
+.terminal-body{padding:16px;font-family:var(--mono);font-size:11px;line-height:1.8;min-height:320px;max-height:320px;overflow-y:auto}
+.terminal-body::-webkit-scrollbar{width:3px}
+.terminal-body::-webkit-scrollbar-thumb{background:var(--bd)}
+.tline{animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.tc-green{color:#00D68F}
+.tc-blue{color:#0066FF}
+.tc-gold{color:#B0BAC8}
+.tc-amber{color:#FFB547}
+.tc-red{color:#FF4D6A}
+.tc-dim{color:#4A6FA5}
+/* CONTROLS */
+.demo-controls{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.btn{padding:8px 18px;border-radius:5px;border:none;cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.06em;transition:all .2s}
+.btn-run{background:var(--el);color:#fff}
+.btn-run:hover{background:#0052CC}
+.btn-reset{background:transparent;border:1px solid var(--bd);color:var(--gold)}
+.btn-reset:hover{border-color:var(--el);color:var(--el)}
+.btn-fix{background:#FF4D6A;color:#fff}
+.btn-a2a{background:var(--green);color:#000}
+/* FLOW DIAGRAM */
+.flow-viz{background:var(--nm);border:1px solid var(--bd);border-radius:8px;padding:20px}
+.flow-nodes{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.fnode{text-align:center;flex:1}
+.fnode-box{display:inline-block;padding:8px 12px;border-radius:6px;font-size:11px;font-weight:600;border:1.5px solid;margin-bottom:4px;min-width:80px;transition:all .4s}
+.fnode-label{font-family:var(--mono);font-size:9px;color:var(--gold)}
+.farrow{font-size:18px;color:var(--bd);transition:color .4s;flex:0 0 auto;padding:0 4px}
+.farrow.active{color:var(--el);text-shadow:0 0 8px var(--el)}
+.fn-buyside{border-color:#1A5C3A;background:rgba(26,92,58,0.2);color:#00D68F}
+.fn-qhub{border-color:var(--el);background:var(--ed);color:var(--el)}
+.fn-sellside{border-color:#6B3A7F;background:rgba(107,58,127,0.15);color:#C084FC}
+.fn-settle{border-color:var(--amber);background:rgba(255,181,71,0.1);color:var(--amber)}
+.fn-active{box-shadow:0 0 16px currentColor;transform:scale(1.05)}
+/* PACKET ANIMATION */
+.packet-row{height:24px;position:relative;margin:8px 0;background:var(--navy);border-radius:4px;overflow:hidden}
+.packet{position:absolute;top:4px;width:60px;height:16px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:8px;font-weight:600;transition:left 1s ease-in-out}
+.pkt-a2a{background:var(--el);color:#fff}
+.pkt-fix{background:var(--red);color:#fff}
+.pkt-qhub{background:var(--amber);color:#000}
+.pkt-settle{background:var(--green);color:#000}
+/* COMPARISON TABLE */
+.cmp-table{width:100%;border-collapse:collapse;font-size:12px}
+.cmp-table th{background:var(--nm);color:var(--gold);font-family:var(--mono);font-size:10px;letter-spacing:.08em;padding:10px 14px;text-align:left;border:1px solid var(--bd)}
+.cmp-table td{padding:10px 14px;border:1px solid var(--bd);vertical-align:top}
+.cmp-table tr:nth-child(even) td{background:rgba(15,30,56,0.5)}
+.cmp-fix{color:var(--red)}
+.cmp-a2a{color:var(--green)}
+.cmp-label{color:var(--gold);font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="lm">⬡</div>QUANTEX</div>
+  <div class="hb"><div class="dl"></div>POST-FIX CONNECTIVITY STACK — LIVE DEMO</div>
+  <div class="hb">MCP + A2A + AP2 + QHUB</div>
+</header>
+
+<div class="hero">
+  <div class="hero-grid">
+    <div class="hero-left">
+      <h1>The <span>Post-FIX</span><br>Trading Stack</h1>
+      <p class="hero-sub">FIX protocol was built in 1992. AI agents need more than tag-value pairs. This demo shows how MCP, A2A, and AP2 replace FIX — with QHUB governance at every layer.</p>
+      <div class="hero-stats">
+        <div class="hstat"><div class="hstat-val">$2–4B</div><div class="hstat-lab">Annual FIX Spend</div></div>
+        <div class="hstat"><div class="hstat-val">90%</div><div class="hstat-lab">Reducible with A2A</div></div>
+        <div class="hstat"><div class="hstat-val">150+</div><div class="hstat-lab">A2A Orgs (Linux Fdn)</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="section-label" style="margin-bottom:12px">Live Order Execution Flow</div>
+      <div class="flow-nodes" id="flowNodes">
+        <div class="fnode"><div class="fnode-box fn-buyside" id="fn0">BUY-SIDE<br>PM AGENT</div><div class="fnode-label">MCP DATA</div></div>
+        <div class="farrow" id="fa0">→</div>
+        <div class="fnode"><div class="fnode-box fn-qhub" id="fn1">QHUB<br>CONTROL</div><div class="fnode-label">IPS + HITL</div></div>
+        <div class="farrow" id="fa1">→</div>
+        <div class="fnode"><div class="fnode-box fn-sellside" id="fn2">SELL-SIDE<br>EXEC AGENT</div><div class="fnode-label">A2A TASK</div></div>
+        <div class="farrow" id="fa2">→</div>
+        <div class="fnode"><div class="fnode-box fn-settle" id="fn3">AP2<br>SETTLE</div><div class="fnode-label">CRYPTOGRAPHIC</div></div>
+      </div>
+      <div class="packet-row"><div class="packet pkt-a2a" id="pkt0" style="left:-70px">A2A</div></div>
+      <div class="packet-row"><div class="packet pkt-qhub" id="pkt1" style="left:-70px">QHUB</div></div>
+      <div class="packet-row"><div class="packet pkt-settle" id="pkt2" style="left:-70px">AP2</div></div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <div class="demo-controls" style="margin:0">
+          <button class="btn btn-run" onclick="runFlow()">▶ EXECUTE ORDER</button>
+          <button class="btn btn-reset" onclick="resetFlow()">RESET</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="stack-section">
+  <div class="section-label">The 6-Layer Capital Markets AI Stack</div>
+  <div class="layers" id="layersDiv"></div>
+
+  <div class="section-label">Live Terminal Comparison</div>
+  <div class="demo-wrap">
+    <div>
+      <div class="demo-controls">
+        <button class="btn btn-fix" onclick="runFIX()">▶ RUN FIX ORDER</button>
+        <button class="btn btn-a2a" onclick="runA2A()">▶ RUN A2A ORDER</button>
+        <button class="btn btn-reset" onclick="clearTerminals()">CLEAR</button>
+      </div>
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="tbar-dot" style="background:#FF5F57"></div>
+          <div class="tbar-dot" style="background:#FFBD2E"></div>
+          <div class="tbar-dot" style="background:#28CA41"></div>
+          <span class="tbar-title">FIX PROTOCOL — fix-session://sellside:4001</span>
+        </div>
+        <div class="terminal-body" id="fixTerm">
+          <div class="tc-dim">$ waiting for order...</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="height:48px"></div>
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="tbar-dot" style="background:#FF5F57"></div>
+          <div class="tbar-dot" style="background:#FFBD2E"></div>
+          <div class="tbar-dot" style="background:#28CA41"></div>
+          <span class="tbar-title">A2A + QHUB — https://agent.qhub.io/.well-known/agent.json</span>
+        </div>
+        <div class="terminal-body" id="a2aTerm">
+          <div class="tc-dim">$ waiting for order...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Protocol Comparison</div>
+  <table class="cmp-table">
+    <tr><th>DIMENSION</th><th>FIX PROTOCOL (1992)</th><th>A2A + QHUB (2025)</th></tr>
+    <tr>
+      <td class="cmp-label">Message Format</td>
+      <td class="cmp-fix">Tag-value pairs: 8=FIX.4.2|35=D|55=AAPL|54=1|38=50000</td>
+      <td class="cmp-a2a">JSON Agent Cards with full intent: symbol, impact target, timing, venue preference, authorization</td>
+    </tr>
+    <tr>
+      <td class="cmp-label">Counterparty Discovery</td>
+      <td class="cmp-fix">Manual bilateral certification. Each connection: months of testing, compliance approval, ongoing maintenance</td>
+      <td class="cmp-a2a">Auto-discovery via Agent Card URL. Any A2A-compliant agent is instantly reachable — zero certification</td>
+    </tr>
+    <tr>
+      <td class="cmp-label">Semantic Intelligence</td>
+      <td class="cmp-fix">None. FIX carries instructions. AI context (reasoning, confidence, market state) is discarded at the message boundary</td>
+      <td class="cmp-a2a">Full context travels: intent, constraints, confidence, alternatives considered. Receiving agent adapts execution</td>
+    </tr>
+    <tr>
+      <td class="cmp-label">Governance Layer</td>
+      <td class="cmp-fix">External and manual. Compliance review post-trade. No real-time IPS enforcement at message level</td>
+      <td class="cmp-a2a">QHUB Control Plane enforces IPS rules in <1ms. Every A2A message logged to immutable audit ledger</td>
+    </tr>
+    <tr>
+      <td class="cmp-label">Quantum Security</td>
+      <td class="cmp-fix">SSL/TLS — vulnerable to harvest-now-decrypt-later attacks. Nation-state adversaries actively capturing FIX sessions</td>
+      <td class="cmp-a2a">PQC-ready (NIST ML-KEM/ML-DSA). QKD path via SCY-QNet (Stony Brook, 170mi, $300M NY State investment)</td>
+    </tr>
+    <tr>
+      <td class="cmp-label">Annual Industry Cost</td>
+      <td class="cmp-fix">$2–4B: engines, connectivity, certification labor, FIX analyst headcount, maintenance. Zero alpha generated</td>
+      <td class="cmp-a2a">90% reducible. A2A SDK open source. No per-counterparty certification. Linux Foundation governance</td>
+    </tr>
+  </table>
+</div>
+
+<script>
+const LAYERS=[
+  {num:"1",icon:"🔌",name:"Broker Connectivity",desc:"Real-time market data and trade execution. WebSocket streaming across equities, options, crypto, futures",owner:"Connect Trade",oc:"owner-ct",bc:"layer-l1"},
+  {num:"2",icon:"🧠",name:"Domain Intelligence",desc:"Capital markets knowledge graph. FIX message types, order states, CTM allocations, OMS mapping",owner:"QHUB",oc:"owner-qh",bc:"layer-l2"},
+  {num:"3",icon:"🔒",name:"Control Plane",desc:"Risk guardrails, IPS rule engine (bytecode compiled), HITL routing, immutable audit ledger (SHA-256)",owner:"QHUB",oc:"owner-qh",bc:"layer-l3"},
+  {num:"4",icon:"🤖",name:"LLM / Model Layer",desc:"Model-agnostic: Claude, GPT-4, Gemini, or QBOT (fine-tuned capital markets model). Zero vendor lock-in",owner:"Client Choice",oc:"owner-cl",bc:"layer-l4"},
+  {num:"5",icon:"⚡",name:"HITL Orchestration",desc:"Supervised agent workflows: Tier 1 auto / Tier 2 review / Tier 3 full control. Firmwide horizontal orchestration",owner:"QHUB",oc:"owner-qh",bc:"layer-l5"},
+  {num:"H",icon:"📊",name:"Observability",desc:"OpenTelemetry to Datadog, Splunk, Prometheus. Every Control Plane event measured and timestamped",owner:"QHUB",oc:"owner-qh",bc:"layer-l0"},
+];
+
+document.getElementById('layersDiv').innerHTML=LAYERS.map((l,i)=>`
+  <div class="layer ${l.bc}" id="layer-${i}" onclick="selectLayer(${i})">
+    <div class="layer-num">${l.num}</div>
+    <div class="layer-icon">${l.icon}</div>
+    <div class="layer-info">
+      <div class="layer-name">${l.name}</div>
+      <div class="layer-desc">${l.desc}</div>
+    </div>
+    <span class="layer-owner ${l.oc}">${l.owner}</span>
+  </div>`).join('');
+
+function selectLayer(i){
+  document.querySelectorAll('.layer').forEach(l=>l.classList.remove('selected'));
+  document.getElementById(`layer-${i}`).classList.add('selected');
+}
+
+// FLOW ANIMATION
+let flowRunning=false;
+function runFlow(){
+  if(flowRunning)return;
+  flowRunning=true;
+  const nodes=['fn0','fn1','fn2','fn3'];
+  const arrows=['fa0','fa1','fa2'];
+  const pkts=['pkt0','pkt1','pkt2'];
+  nodes.forEach(n=>document.getElementById(n).classList.remove('fn-active'));
+  arrows.forEach(a=>document.getElementById(a).classList.remove('active'));
+  pkts.forEach(p=>{document.getElementById(p).style.left='-70px'});
+
+  const W=document.querySelector('.packet-row').offsetWidth-70;
+  const q=(p,pos,t)=>{setTimeout(()=>document.getElementById(p).style.left=`${pos}px`,t)};
+
+  setTimeout(()=>document.getElementById('fn0').classList.add('fn-active'),200);
+  q('pkt0',W/4,400); setTimeout(()=>document.getElementById('fa0').classList.add('active'),800);
+  setTimeout(()=>{document.getElementById('fn0').classList.remove('fn-active');document.getElementById('fn1').classList.add('fn-active')},900);
+  q('pkt0',W/2,1000); q('pkt1',W/4,1200); setTimeout(()=>document.getElementById('fa1').classList.add('active'),1500);
+  setTimeout(()=>{document.getElementById('fn1').classList.remove('fn-active');document.getElementById('fn2').classList.add('fn-active')},1600);
+  q('pkt0',W*0.75,1800); q('pkt1',W/2,1900); q('pkt2',W/4,2100); setTimeout(()=>document.getElementById('fa2').classList.add('active'),2300);
+  setTimeout(()=>{document.getElementById('fn2').classList.remove('fn-active');document.getElementById('fn3').classList.add('fn-active')},2400);
+  q('pkt0',W,2600); q('pkt1',W*0.75,2700); q('pkt2',W/2,2800);
+  setTimeout(()=>{document.getElementById('fn3').classList.remove('fn-active');flowRunning=false},4000);
+}
+
+function resetFlow(){
+  flowRunning=false;
+  ['fn0','fn1','fn2','fn3'].forEach(n=>document.getElementById(n).classList.remove('fn-active'));
+  ['fa0','fa1','fa2'].forEach(a=>document.getElementById(a).classList.remove('active'));
+  ['pkt0','pkt1','pkt2'].forEach(p=>document.getElementById(p).style.left='-70px');
+}
+
+// TERMINAL DEMOS
+function addLine(id,text,cls,delay){
+  setTimeout(()=>{
+    const t=document.getElementById(id);
+    const d=document.createElement('div');
+    d.className=`tline ${cls||''}`;d.textContent=text;
+    t.appendChild(d);t.scrollTop=t.scrollHeight;
+  },delay);
+}
+
+function runFIX(){
+  const t='fixTerm';document.getElementById(t).innerHTML='';
+  const lines=[
+    ['$ Initiating FIX session to sell-side...','tc-gold',100],
+    ['FIX.4.2 | Session: BUYSIDE→SELLSIDE:4001','tc-dim',400],
+    ['[WARN] Bilateral certification required','tc-amber',700],
+    ['[WARN] Last cert expired — must recertify','tc-amber',900],
+    ['[INFO] Sending New Order Single (35=D)','tc-gold',1300],
+    ['8=FIX.4.2|9=178|35=D|49=BUYSIDE|56=SELLSIDE','tc-dim',1600],
+    ['11=ORD001|21=1|55=AAPL|54=1|38=50000','tc-dim',1800],
+    ['40=2|44=185.50|59=0|10=233|','tc-dim',2000],
+    ['[WARN] No intent context transmitted','tc-amber',2400],
+    ['[WARN] AI reasoning discarded at boundary','tc-red',2600],
+    ['[INFO] Awaiting Execution Report (35=8)...','tc-gold',3000],
+    ['8=FIX.4.2|35=8|17=EXEC001|37=ORD001','tc-dim',3500],
+    ['39=2|150=2|14=50000|6=185.47|','tc-dim',3700],
+    ['[INFO] Order filled — manual reconciliation pending','tc-gold',4000],
+    ['[WARN] Audit trail: session logs only','tc-amber',4200],
+    ['[WARN] Governance: post-trade review only','tc-red',4500],
+    ['[ERROR] IPS validation: not performed pre-trade','tc-red',4800],
+    ['$ Done. Time: 4.8s | Cert status: EXPIRED | Governance: NONE','tc-amber',5200],
+  ];
+  lines.forEach(([txt,cls,delay])=>addLine(t,txt,cls,delay));
+}
+
+function runA2A(){
+  const t='a2aTerm';document.getElementById(t).innerHTML='';
+  const lines=[
+    ['$ Discovering sell-side agent via A2A...','tc-gold',100],
+    ['GET https://sellside.firm/.well-known/agent.json','tc-blue',300],
+    ['✓ Agent Card received — capabilities indexed','tc-green',500],
+    ['✓ No certification required — auto-discovery','tc-green',700],
+    ['$ QHUB Control Plane — IPS evaluation...','tc-gold',1000],
+    ['  Checking: position_limit ... PASS (0.3ms)','tc-green',1200],
+    ['  Checking: sector_concentration ... PASS (0.2ms)','tc-green',1400],
+    ['  Checking: restricted_list ... PASS (0.1ms)','tc-green',1600],
+    ['  Checking: counterparty_approved ... PASS (0.2ms)','tc-green',1800],
+    ['✓ IPS validated — 4 rules in 0.8ms','tc-green',2000],
+    ['$ Sending A2A task message...','tc-gold',2300],
+    ['  intent: EXECUTE AAPL 50000 BUY','tc-blue',2500],
+    ['  max_impact_bps: 8 | venue: DARK→LIT','tc-blue',2700],
+    ['  complete_by: 14:30ET | auth: trader-approved','tc-blue',2900],
+    ['  qhub_audit_hash: sha256:a4f2b8c1...','tc-blue',3100],
+    ['✓ A2A task accepted by sell-side agent','tc-green',3400],
+    ['$ Execution complete — VWAP dev: +2.1bps','tc-green',4800],
+    ['$ AP2 settlement — cryptographic confirmation','tc-gold',5100],
+    ['✓ Terms signed by both agents — AP2/1.0','tc-green',5400],
+    ['✓ Audit: 847 events | Export: 4 seconds','tc-green',5700],
+    ['✓ Governance: real-time throughout','tc-green',5900],
+    ['$ Done. Time: 1.2s | Certification: NONE | Governance: FULL','tc-green',6200],
+  ];
+  lines.forEach(([txt,cls,delay])=>addLine(t,txt,cls,delay));
+}
+
+function clearTerminals(){
+  ['fixTerm','a2aTerm'].forEach(t=>{
+    document.getElementById(t).innerHTML='<div class="tc-dim">$ waiting for order...</div>';
+  });
+}
+</script>
+</body>
+</html>
